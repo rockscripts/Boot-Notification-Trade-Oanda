@@ -56,6 +56,6 @@ request.go();
 $(document).ready(function(){
   var selectorId =  $(this).attr("id")
   $(document).on("click",".open-rading",function(){
-    
+     
   })
 })
