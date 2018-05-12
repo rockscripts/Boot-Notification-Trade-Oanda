@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Trading on OANDA</title>
+  </head>
+  <body>
+    <h1>Trading on OANDA</h1>
+    <br>
+     <div id="accountsList">
+        <table class="table table-dark" id="tableAccounts">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col sortable=true">Alias</th>
+                <th scope="col sortable">Balance</th>
+                <th scope="col sortable">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="accountListDataTable">
+            </tbody>
+          </table>
+     </div>
+    <script>
+      require('./accounts.js');          
+    </script>
+    <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <style>
+    .icons
+    {width: 40px;height: 40px;cursor: pointer}
+    body{
+      background: #3a7fd5;
+    background: linear-gradient(to right, #3a7fd5, #6ebce2);
+     }
+     table.dataTable tbody tr
+     {background: black!important}
+    </style>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css"/>
+  </body>
+</html>
