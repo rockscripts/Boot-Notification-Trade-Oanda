@@ -1,0 +1,37 @@
+   .icons
+    {
+        width: 40px;
+        height: 40px;
+        cursor: pointer
+    }
+
+    body
+    {
+        display:none;
+        background: #3a7fd5;
+        margin: 10px!important;
+        background: linear-gradient(to right, #3a7fd5, #6ebce2);
+    }
+
+    table.dataTable tbody tr
+     {
+         background: black!important
+     }
+     .hide
+     {
+         display:none!important;
+     }
+     .show
+     {
+         display: block!important;
+     }
+     .logo
+     {
+      width: 50px;
+      height: 50px;    
+     }
+     .powered
+     {margin-top: -13px!important;
+        position: absolute;
+        margin-left: 220px;
+        color: aqua;}

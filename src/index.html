@@ -3,9 +3,16 @@
   <head>
     <meta charset="UTF-8">
     <title>Trading on OANDA</title>
+    <link rel="stylesheet" type="text/css" href="../assets/css/style.css"/>
   </head>
   <body>
-    <h1>Trading on OANDA</h1>
+    <div style="margin:8px;">
+
+    
+    <h1><img src="../assets/images/nut.png" class="logo"/>Trading Friendly<br>
+    
+    </h1>
+    <small class="powered">Powered by OANDA</small>
     <br>
      <div id="accountsList">
         <table class="table table-dark" id="tableAccounts">
@@ -21,20 +28,18 @@
             </tbody>
           </table>
      </div>
+     <div id="traddingMain">
+       <img src="../assets/images/left-arrow.png" class="icons goBackAccounts" id="goBackAccounts"/>
+       <div id="traddingMainContent"></div>
+     </div>
+
     <script>
-      require('./accounts.js');          
+      require('./accounts.js');
+      require('./trades.js');         
     </script>
     <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
-    <style>
-    .icons
-    {width: 40px;height: 40px;cursor: pointer}
-    body{
-      background: #3a7fd5;
-    background: linear-gradient(to right, #3a7fd5, #6ebce2);
-     }
-     table.dataTable tbody tr
-     {background: black!important}
-    </style>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css"/>     
+     <input id="openTradeID" name="openTradeID" type="hidden" value="null"/>
+    </div>
   </body>
 </html>

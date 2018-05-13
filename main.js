@@ -1,6 +1,7 @@
 //require('electron-reload')(__dirname)
 const electron = require('electron')
 
+
 require('electron-debug')({showDevTools: true});
 // Module to control application life.
 const app = electron.app
@@ -21,7 +22,7 @@ function createWindow () {
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'src/index.html'),
-    protocol: 'file:', 
+    protocol: 'file:',  
     slashes: true    
   }))
 
@@ -58,6 +59,10 @@ app.on('activate', function () {
     createWindow()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+var config = {
+  token: 'ef341f419fd90a61daea143902dfbea8-57c5975686db1479da10cc247075a93a',
+  type: 'practice',
+  dateFormat: 'unix',
+  version:"v20"
+};
+global.configuration = {conf: config};
