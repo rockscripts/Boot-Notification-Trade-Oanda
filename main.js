@@ -65,4 +65,12 @@ var config = {
   dateFormat: 'unix',
   version:"v20"
 };
-global.configuration = {conf: config};
+global.configurationV2 = {conf: config};
+
+var configv1 = {
+  token: 'ef341f419fd90a61daea143902dfbea8-57c5975686db1479da10cc247075a93a',
+  type: 'practice',
+  dateFormat: 'unix',
+  version:"v1"
+};
+global.configurationV1 = {configv1: configv1};

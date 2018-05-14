@@ -8,6 +8,16 @@ var Oanda = require('node-oanda');
       version:"v1"
     };
         var apiV1 = new Oanda(config);
+        var Oanda = require('node-oanda');
+
+     var config1 = {
+      token: 'ef341f419fd90a61daea143902dfbea8-57c5975686db1479da10cc247075a93a',
+      type: 'practice',
+      dateFormat: 'unix',
+      version:"v20"
+    };
+        var apiV1 = new Oanda(config);
+        var apiV2 = new Oanda(config1);
         var instruments =  new Array();
         var requestCurrentPrices = apiV1.rates.getCurrentPrices(["EUR_USD"]);
         requestCurrentPrices.success(function(dataPrices) 
@@ -18,13 +28,31 @@ var Oanda = require('node-oanda');
           Object.keys(ratesprices).forEach(function(key) 
             {
               var rateLine = ratesprices[key];
-              console.log(rateLine);
+              
+              var requestInstrumentHistory = apiV2.rates.retrieveInstrumentHistory(["EUR_USD"],{count:1});
+              requestInstrumentHistory.success(function(dataInstrumentHistory) 
+              {
+                var candles = dataInstrumentHistory.candles;
+                var index = 0; 
+                Object.keys(candles).forEach(function(key) 
+                  {
+                    var candleLine = candles[key];
+                    console.log(candleLine);
+                  });
+              });
+              requestInstrumentHistory.error(function(err) {           
+                console.log('ERROR[RATES LIST]: ', err);
+              });
+              requestInstrumentHistory.go();
+
             });
         });
         requestCurrentPrices.error(function(err) {           
           console.log('ERROR[RATES LIST]: ', err);
         });
         requestCurrentPrices.go();
+        
+
         
         
         function timeConverter(UNIX_timestamp){

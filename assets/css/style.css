@@ -35,3 +35,11 @@
         position: absolute;
         margin-left: 220px;
         color: aqua;}
+
+    .bar-head
+    {
+      background: linear-gradient(to left, #3a7fd5, #6ebce2);
+      padding: 5px;
+      border-bottom: 3px;
+      margin-bottom: 10px;
+    }
