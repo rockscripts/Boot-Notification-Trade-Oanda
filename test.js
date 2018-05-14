@@ -19,7 +19,7 @@ var Oanda = require('node-oanda');
         var apiV1 = new Oanda(config);
         var apiV2 = new Oanda(config1);
         var instruments =  new Array();
-        var requestCurrentPrices = apiV1.rates.getCurrentPrices(["EUR_USD"]);
+        var requestCurrentPrices = apiV2.accounts.getCurrentPricesV2("101-004-8382586-001",["EUR_USD"]);
         requestCurrentPrices.success(function(dataPrices) 
         {
           var dataSet = [];
@@ -28,7 +28,7 @@ var Oanda = require('node-oanda');
           Object.keys(ratesprices).forEach(function(key) 
             {
               var rateLine = ratesprices[key];
-              
+              console.log(rateLine)
               var requestInstrumentHistory = apiV2.rates.retrieveInstrumentHistory(["EUR_USD"],{count:1});
               requestInstrumentHistory.success(function(dataInstrumentHistory) 
               {
