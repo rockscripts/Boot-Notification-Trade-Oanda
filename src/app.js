@@ -10,6 +10,19 @@ var   configv2 = remote.getGlobal('configurationV2').conf;
 
 var   api = new Oanda(configv2); 
 
+/*added to replace trade or edit
+  node oanda does not work
+*/
+var OANDAAdapter = require('oanda-adapter-v20');
+
+var client = new OANDAAdapter({
+    // 'live', 'practice' or 'sandbox'
+    environment: 'practice',
+    // Generate your API access in the 'Manage API Access' section of 'My Account' on OANDA's website
+    accessToken: configv2.tokent,    
+});
+
+
 /*ACCOUNTS CODE*/
 var request = api.accounts.getAccountsForUser();
 var dataSet = [];
@@ -80,7 +93,7 @@ requestTrades.success(function(dataTrades)
   Object.keys(tradesList).forEach(function(key) 
   {
     var tradeLine = tradesList[key];
-    var row = [tradeLine.id,tradeLine.instrument,tradeLine.currentUnits,tradeLine.price,"<span class='current-price-"+tradeLine.instrument+"' trade-unit='"+tradeLine.currentUnits+"' trade-price='"+tradeLine.price+"' index='"+index+"'></span>","<span class='trade-profit-"+index+"'></span>",timeConverter(tradeLine.openTime),"<img src='../assets/images/056-profits-6.png' class='icons' id='"+tradeLine.id+"' />"]; ;
+    var row = [tradeLine.id,tradeLine.instrument,tradeLine.currentUnits,tradeLine.price,"<span class='current-price-"+tradeLine.instrument+"' trade-unit='"+tradeLine.currentUnits+"' trade-price='"+tradeLine.price+"' index='"+index+"' trade-id='"+tradeLine.id+"'></span>","<span class='trade-profit-"+index+"'></span>",timeConverter(tradeLine.openTime),"<img src='../assets/images/056-profits-6.png' class='icons' id='"+tradeLine.id+"' />"]; ;
     console.log(tradeLine)
     dataSet[index] = row;
       
@@ -103,7 +116,7 @@ accountsList.fadeIn();
 /*CODE UPDATE CURRENT PRICE FOR BID*/
 function updateLiveData()
 {
-  new CronJob('3 * * * * *', function() {
+  new CronJob('* * * * * *', function() {
   var accountId = jQuery("#accountId").val();
   var instruments =  ["EUR_USD"];
         var requestCurrentPrices = api.accounts.getCurrentPricesV2(accountId,instruments);
@@ -138,14 +151,21 @@ function updateLiveData()
                      var currentPrice = jQuery(this).text();
                      var tradeUnit = jQuery(this).attr("trade-unit");
                      var tradePrice = jQuery(this).attr("trade-price");
+                     var tradeId = jQuery(this).attr("trade-id");
                      var currentIndex = jQuery(this).attr("index");
                      var openingRate = mid.o;
                      var closingRate = mid.c;//candles
                      openingRate = rateLine.closeoutBid;
                      closingRate = rateLine.closeoutAsk;
-                     //console.log("("+closingRate+"-"+openingRate+")"+"* ("+tradePrice+")"+" * "+tradeUnit);
                      var profit = (currentPrice - tradePrice) * tradeUnit;
-                     jQuery(".trade-profit-"+currentIndex).text(profit.toFixed(2));
+                     if(profit>0.10)
+                     {
+                       takeProfit(tradeId, currentPrice+0.00003);//require above current price
+                       var notificationDate = new Date().today() + " @ " + new Date().timeNow();
+                       sendNotification("Take Profit Requested","Trade ID: "+tradeId +"\n"+"Take at: "+currentPrice+"\n"+notificationDate);
+                     }
+
+                      jQuery(".trade-profit-"+currentIndex).text(profit.toFixed(2));
                     });
                   }  
               });
@@ -178,4 +198,29 @@ var min = a.getMinutes();
 var sec = a.getSeconds();
 var time = date + '/' + month + '/' + year + ' ' + hour + ':' + min + ':' + sec ;
 return time;
+}
+function takeProfit(tradeId, currentPrice)
+{
+  var accountId = jQuery("#accountId").val();
+  client.replaceTrade(accountId,tradeId,{"takeProfit":{"price":currentPrice,"timeInForce": "GTC",}},function(data)
+    {
+    });
+}
+function sendNotification(subject,message)
+{
+  var email 	= require("emailjs");
+var server 	= email.server.connect({
+   user:    "rockscripts@gmail.com", 
+   password:"Rock!123", 
+   host:    "smtp.gmail.com", 
+   ssl:     true
+});
+
+// send the message and get a callback with an error or details of the message that was sent
+server.send({
+   text:    message, 
+   from:    "you <rockscripts@gmail.com>", 
+   to:      "someone <wsalexws@gmail.com>",
+   subject: subject
+}, function(err, message) { console.log(err || message); });
 }
