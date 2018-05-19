@@ -1,25 +1,37 @@
 window.$ = window.jQuery  = require( 'jquery' );
+var jui = require('jquery-ui-bundle');
+
+var mysql = require('mysql');
+var DBconnection = mysql.createConnection({
+  host: "localhost",
+  user: "oanda",
+  password: "oanda123",
+  database: "oanda",
+  port: "3307"
+});
 
 var Oanda = require('node-oanda');
 var dt = require('datatables.net-responsive')( window, jQuery );
 var fa = require("fontawesome");
+var serialize = require('dom-form-serializer').serialize
+var currencyFormatter = require('currency-formatter');
+
 var CronJob = require('cron').CronJob;
 
 const remote = window.require('electron').remote;
 var   configv2 = remote.getGlobal('configurationV2').conf;
 
 var   api = new Oanda(configv2); 
-
 /*added to replace trade or edit
   node oanda does not work
 */
 var OANDAAdapter = require('oanda-adapter-v20');
-
+console.log(configv2.token)
 var client = new OANDAAdapter({
     // 'live', 'practice' or 'sandbox'
     environment: 'practice',
     // Generate your API access in the 'Manage API Access' section of 'My Account' on OANDA's website
-    accessToken: configv2.tokent,    
+    accessToken: configv2.token,    
 });
 
 
@@ -42,7 +54,7 @@ request.success(function(data) {
         requestAccountDetails.success(function(dataAccount) 
         {              
             var accountDetails = dataAccount.account;   
-            var row = [accountDetails.id,accountDetails.alias,accountDetails.currency+" "+accountDetails.balance,"<img src='../assets/images/056-profits-6.png' class='icons open-trading' id='"+accountDetails.id+"' />"]; ;
+            var row = [accountDetails.id,accountDetails.alias,currencyFormatter.format(accountDetails.balance, { code: accountDetails.currency }),"<img src='../assets/images/056-profits-6.png' class='icons open-trading' id='"+accountDetails.id+"' />"]; ;
             dataSet[index] = row;
             
             if(index == tmpObject.length-1)
@@ -65,6 +77,8 @@ request.go();
 
 var tradingMain  = jQuery("#traddingMain");
 var accountsList  = jQuery("#accountsList");
+var tradeConfiguration = jQuery("#tradeConfiguration");
+var buttonAddBuyConf = jQuery(".addBuyRowGlobal");
 
 jQuery("body").css("display","inline");
 tradingMain.fadeOut();
@@ -109,14 +123,79 @@ requestTrades.go();
 
 jQuery(document).on("click",".goBackAccounts",function(){   
 tradingMain.fadeOut( "slow", function() {
+  jQuery("#tradeConfiguration").fadeIn();
 accountsList.fadeIn();
+jQuery("#goGlobalConfiguration").fadeIn();
+tradeConfiguration.hide();
+tradeConfiguration.dialog("close");
 })
+});
+
+//goGlobalConfiguration
+
+jQuery(document).on("click",".goGlobalConfiguration",function()
+{ 
+  var accountID = jQuery("#accountId").val();
+  jQuery(".form-accountId").val(accountID);
+  tradeConfiguration.dialog({
+    modal: true,
+    resizable: false,
+    title: ' Add BUY configuration',
+    open: function(){
+      jQuery('.ui-dialog').css({
+                                'width': $(window).width(),
+                                'height': $(window).height(),
+                                'left': '0px',
+                                'top':'0px'
+                              });
+      jQuery("#goGlobalConfiguration").fadeOut();
+      jQuery("#tradesList").fadeOut();
+      buttonAddBuyConf.fadeIn();
+                    },
+    close: function(){
+      jQuery(".goGlobalConfiguration").fadeIn();
+      jQuery("#tradesList").fadeIn();
+    }
+ });
+ jQuery("#addGlobalConfigurationBUYoportunity").addClass("hide");
+ tradeConfiguration.dialog("open");
+});
+jQuery(document).on("click",".addBuyRowGlobal",function()
+{ 
+  var instrumentsDropdown = jQuery("#instrumetns-dropdown");
+  var accoundId = jQuery("#accountId").val();
+  client.getInstrumentsList(accoundId,function(instruments){
+  Object.keys(instruments).forEach(function(key) 
+      {
+        var instrumentLine = instruments[key];
+        instrumentsDropdown.append(jQuery("<option />").val(instrumentLine.name).text(instrumentLine.displayName));                  
+      });
+  jQuery("#addGlobalConfigurationBUYoportunity").removeClass("hide");
+  jQuery(".addBuyRowGlobal").fadeOut("fast");
+  });
+  
+});
+jQuery(document).on("click",".closeForm-addGlobalConfigurationBUYoportunity",function()
+{
+  jQuery("#addGlobalConfigurationBUYoportunity").addClass("hide",function(){  buttonAddBuyConf.fadeIn(); });    
+});
+
+jQuery( "#addGlobalConfigurationBUYoportunity" ).submit(function( event ) 
+{
+  event.preventDefault();
+  var object = serialize(document.querySelector('#addGlobalConfigurationBUYoportunity'))
+  console.log(object);  
+  DBconnection.query('INSERT INTO globalConfiguration SET ?', object, function (error, results, fields) 
+  {
+    if (error) throw error;
+    console.log(results.insertId);
+  });  
 });
 
 /*CODE UPDATE CURRENT PRICE FOR BID*/
 function updateLiveData()
 {
-  new CronJob('* * * * * *', function() {
+  new CronJob('* 5 * * * *', function() {
   var accountId = jQuery("#accountId").val();
   var instruments =  ["EUR_USD"];
         var requestCurrentPrices = api.accounts.getCurrentPricesV2(accountId,instruments);
@@ -158,16 +237,20 @@ function updateLiveData()
                      openingRate = rateLine.closeoutBid;
                      closingRate = rateLine.closeoutAsk;
                      var profit = (currentPrice - tradePrice) * tradeUnit;
+                     var nowDateTime = new Date();
+                     nowDateTime = formatDate(nowDateTime, "dddd h:mmtt d MMM yyyy");
+                     var takeProfitPrice = sumeFloat(currentPrice,0.00008);
                      if(profit>0.10)
                      {
-                       takeProfit(tradeId, currentPrice+0.00003);//require above current price
-                       var notificationDate = new Date().today() + " @ " + new Date().timeNow();
-                       sendNotification("Take Profit Requested","Trade ID: "+tradeId +"\n"+"Take at: "+currentPrice+"\n"+notificationDate);
+                       takeProfit(tradeId, takeProfitPrice);//require above current price
+                     //  var notificationDate = new Date().today() + " @ " + new Date().timeNow();
+                       sendNotification("Take Profit Requested","Trade ID: "+tradeId +"\n"+"Taked at: "+takeProfitPrice+"\n"+"Date: "+nowDateTime);
                      }
-
-                      jQuery(".trade-profit-"+currentIndex).text(profit.toFixed(2));
+                      var base_currency = rateLine.instrument.split("_");
+                      base_currency = base_currency[0];
+                      jQuery(".trade-profit-"+currentIndex).text(currencyFormatter.format(profit, { code: base_currency }));
                     });
-                  }  
+                  }
               });
               requestInstrumentHistory.error(function(err) {           
                 console.log('ERROR[RATES LIST]: ', err);
@@ -184,8 +267,10 @@ function updateLiveData()
         
 }
 
-
-
+function sumeFloat(a,b)
+{
+  return (parseFloat(a) + parseFloat(b)).toFixed(5);
+}
 //@format 11/5/2018 15:59:45
 function timeConverter(UNIX_timestamp){
 var a = new Date(UNIX_timestamp * 1000);
@@ -224,3 +309,86 @@ server.send({
    subject: subject
 }, function(err, message) { console.log(err || message); });
 }
+
+function formatDate(date, format, utc) {
+  var MMMM = ["\x00", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var MMM = ["\x01", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var dddd = ["\x02", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  var ddd = ["\x03", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  function ii(i, len) {
+      var s = i + "";
+      len = len || 2;
+      while (s.length < len) s = "0" + s;
+      return s;
+  }
+
+  var y = utc ? date.getUTCFullYear() : date.getFullYear();
+  format = format.replace(/(^|[^\\])yyyy+/g, "$1" + y);
+  format = format.replace(/(^|[^\\])yy/g, "$1" + y.toString().substr(2, 2));
+  format = format.replace(/(^|[^\\])y/g, "$1" + y);
+
+  var M = (utc ? date.getUTCMonth() : date.getMonth()) + 1;
+  format = format.replace(/(^|[^\\])MMMM+/g, "$1" + MMMM[0]);
+  format = format.replace(/(^|[^\\])MMM/g, "$1" + MMM[0]);
+  format = format.replace(/(^|[^\\])MM/g, "$1" + ii(M));
+  format = format.replace(/(^|[^\\])M/g, "$1" + M);
+
+  var d = utc ? date.getUTCDate() : date.getDate();
+  format = format.replace(/(^|[^\\])dddd+/g, "$1" + dddd[0]);
+  format = format.replace(/(^|[^\\])ddd/g, "$1" + ddd[0]);
+  format = format.replace(/(^|[^\\])dd/g, "$1" + ii(d));
+  format = format.replace(/(^|[^\\])d/g, "$1" + d);
+
+  var H = utc ? date.getUTCHours() : date.getHours();
+  format = format.replace(/(^|[^\\])HH+/g, "$1" + ii(H));
+  format = format.replace(/(^|[^\\])H/g, "$1" + H);
+
+  var h = H > 12 ? H - 12 : H == 0 ? 12 : H;
+  format = format.replace(/(^|[^\\])hh+/g, "$1" + ii(h));
+  format = format.replace(/(^|[^\\])h/g, "$1" + h);
+
+  var m = utc ? date.getUTCMinutes() : date.getMinutes();
+  format = format.replace(/(^|[^\\])mm+/g, "$1" + ii(m));
+  format = format.replace(/(^|[^\\])m/g, "$1" + m);
+
+  var s = utc ? date.getUTCSeconds() : date.getSeconds();
+  format = format.replace(/(^|[^\\])ss+/g, "$1" + ii(s));
+  format = format.replace(/(^|[^\\])s/g, "$1" + s);
+
+  var f = utc ? date.getUTCMilliseconds() : date.getMilliseconds();
+  format = format.replace(/(^|[^\\])fff+/g, "$1" + ii(f, 3));
+  f = Math.round(f / 10);
+  format = format.replace(/(^|[^\\])ff/g, "$1" + ii(f));
+  f = Math.round(f / 10);
+  format = format.replace(/(^|[^\\])f/g, "$1" + f);
+
+  var T = H < 12 ? "AM" : "PM";
+  format = format.replace(/(^|[^\\])TT+/g, "$1" + T);
+  format = format.replace(/(^|[^\\])T/g, "$1" + T.charAt(0));
+
+  var t = T.toLowerCase();
+  format = format.replace(/(^|[^\\])tt+/g, "$1" + t);
+  format = format.replace(/(^|[^\\])t/g, "$1" + t.charAt(0));
+
+  var tz = -date.getTimezoneOffset();
+  var K = utc || !tz ? "Z" : tz > 0 ? "+" : "-";
+  if (!utc) {
+      tz = Math.abs(tz);
+      var tzHrs = Math.floor(tz / 60);
+      var tzMin = tz % 60;
+      K += ii(tzHrs) + ":" + ii(tzMin);
+  }
+  format = format.replace(/(^|[^\\])K/g, "$1" + K);
+
+  var day = (utc ? date.getUTCDay() : date.getDay()) + 1;
+  format = format.replace(new RegExp(dddd[0], "g"), dddd[day]);
+  format = format.replace(new RegExp(ddd[0], "g"), ddd[day]);
+
+  format = format.replace(new RegExp(MMMM[0], "g"), MMMM[M]);
+  format = format.replace(new RegExp(MMM[0], "g"), MMM[M]);
+
+  format = format.replace(/\\(.)/g, "$1");
+
+  return format;
+};

@@ -1,49 +1,3 @@
-
-/*var Oanda = require('node-oanda');
-
-     var config = {
-      token: 'ef341f419fd90a61daea143902dfbea8-57c5975686db1479da10cc247075a93a',
-      type: 'practice',
-      dateFormat: 'unix',
-      version:"v1"
-    };
-        var apiV1 = new Oanda(config);
-        var Oanda = require('node-oanda');
-
-     var config1 = {
-      token: 'ef341f419fd90a61daea143902dfbea8-57c5975686db1479da10cc247075a93a',
-      type: 'practice',
-      dateFormat: 'unix',
-      version:"v20"
-    };
-        var apiV1 = new Oanda(config);
-        var apiV2 = new Oanda(config1);
-        var requestInstrumentHistory = apiV2.trades.modifyExistingTrade("101-004-8382586-001","75",{"takeProfit":{"price":"1.19900","timeInForce": "GTC",}});
-        requestInstrumentHistory.success(function(dataInstrumentHistory) 
-        {
-           console.log(dataInstrumentHistory)
-        });
-        requestInstrumentHistory.error(function(err) {           
-          console.log('ERROR[RATES LIST]: ', err);
-        });
-        requestInstrumentHistory.go();
-
-        
-        
-        function timeConverter(UNIX_timestamp){
-          var a = new Date(UNIX_timestamp * 1000);
-          var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-          var year = a.getFullYear();
-          var month = a.getMonth()+1
-          var date = a.getDate();
-          var hour = a.getHours();
-          var min = a.getMinutes();
-          var sec = a.getSeconds();
-          var time = date + '/' + month + '/' + year + ' ' + hour + ':' + min + ':' + sec ;
-          return time;
-        }
-        console.log(timeConverter('1526072385.000000000'));*/
-
 /*var OANDAAdapter = require('oanda-adapter-v20');
 var client = new OANDAAdapter({
     // 'live', 'practice' or 'sandbox'
@@ -51,22 +5,44 @@ var client = new OANDAAdapter({
     // Generate your API access in the 'Manage API Access' section of 'My Account' on OANDA's website
     accessToken: 'ef341f419fd90a61daea143902dfbea8-57c5975686db1479da10cc247075a93a',    
 });
-client.replaceTrade("101-004-8382586-001","75",{"takeProfit":{"price":"1.19900","timeInForce": "GTC",}},function(data){
-console.log(data)
-});*/
 
-var email 	= require("emailjs");
-var server 	= email.server.connect({
-   user:    "rockscripts@gmail.com", 
-   password:"Rock!123", 
-   host:    "smtp.gmail.com", 
-   ssl:     true
+client.getInstrumentsList("101-004-8382586-001",function(instruments){
+Object.keys(instruments).forEach(function(key) 
+                  {
+                    var instrumentLine = instruments[key];
+                    name = instrumentLine.name;                   
+                  });
+});*/
+var mysql = require('mysql');
+var DBconnection = mysql.createConnection({
+  host: "localhost",
+  user: "oanda",
+  password: "oanda123",
+  database: "oanda",
+  port: "3307"
 });
 
-// send the message and get a callback with an error or details of the message that was sent
-server.send({
-   text:    "i hope this works", 
-   from:    "you <rockscripts@gmail.com>", 
-   to:      "someone <wsalexws@gmail.com>",
-   subject: "testing emailjs"
-}, function(err, message) { console.log(err || message); });
+
+DBconnection.connect(function(err) 
+{});
+DBconnection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
+  if (error) throw error;
+  console.log('The solution is: ', results[0].solution);
+});
+
+DBconnection.query('INSERT INTO globalConfiguration SET ?', 
+                       {
+                         accountId: '101-004-8382586-001',
+                         type: 'BUY',
+                         instrument: 'EUR_USD',
+                         minPrice: '1.18014',
+                         maxPrice: '1.19014',
+                         takeProfit: '0.10',
+                         stopLoss: '0.20',
+                         maxUnits: '100',
+                         enabled: 'true'
+                       }
+, function (error, results, fields) {
+  if (error) throw error;
+  console.log(results.insertId);
+});

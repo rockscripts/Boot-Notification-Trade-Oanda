@@ -29,10 +29,10 @@
           </table>
      </div>
      <div id="traddingMain">
-       <div class="bar-head"><img src="../assets/images/left-arrow.png" class="icons goBackAccounts" id="goBackAccounts"/></div>
+       <div class="bar-head trading-bar"><img src="../assets/images/left-arrow.png" class="icons goBackAccounts" id="goBackAccounts" title="Go Back"/>&nbsp;<img src="../assets/images/settings.png" class="icons goGlobalConfiguration" id="goGlobalConfiguration" title="Global Configuration for Trading"/></div>
        
        <div id="traddingMainContent">
-        <div id="accountsList">
+        <div id="tradesList">
           <table class="table table-dark" id="tableTrading">
               <thead>
                 <tr>
@@ -49,16 +49,65 @@
               <tbody>
               </tbody>
             </table>
+            <div id="tradeConfiguration">
+               
+              <div id="buy-global-configuration">
+                <h3>Take Invest Oportunity</h3>
+                <p>Add configurations for instruments</p>
+                <img src="../assets/images/add.png" class="icons addBuyRowGlobal" id="addBuyRowGlobal" title="BUY / Add configuration for an instrument"/>
+                <div class="buy-row-global-configuration">
+                <form id="addGlobalConfigurationBUYoportunity" name="addGlobalConfigurationBUYoportunity" method="POST" class="hide">
+                    <div class="form-group">
+                        <label>Instrument</label>
+                        <select class="instruments form-control" id="instrumetns-dropdown" name="instrument">
+                        </select>
+                    </div>
+                     <div class="form-group">
+                        <label>Min. Price</label>
+                        <input name="minPrice" type="number" class="buy-min-price form-control" value="" placeholder="1.18014" step="0.00001"/>
+                    </div>
+                    <div class="form-group">
+                      <label>Max. Price</label>
+                      <input name="maxPrice" type="number" class="buy-max-price form-control" value="" placeholder="1.19014" step="0.00001"/>
+                    </div>
+                    <div class="form-group">
+                      <label>Take profit</label>
+                      <input name="takeProfit"  type="number" class="buy-take-profit-money form-control" value="" placeholder="0.10" step="0.00001"/>                  
+                  </div>    
+                  <div class="form-group">
+                    <label>Stop loss</label>
+                    <input name="stopLoss" type="number" class="buy-stop-loss-money form-control" value="" placeholder="1.0" step="0.00001"/>                 
+                 </div> 
+                 <div class="form-group">
+                    <label>Max. Units</label>
+                    <input name="maxUnits" type="number" class="buy-max-units-money form-control" value="" placeholder="100" />                 
+                 </div>  
+                 <div class="form-check">
+                    <input name="enabled" type="checkbox" class="filled-in form-check-input" id="enableConf" checked="checked">
+                    <label class="form-check-label" for="enableConf">Enable/Disable</label>
+                </div> 
+                <br> 
+                 <div class="btn btn-close-custom closeForm-addGlobalConfigurationBUYoportunity">Cancel</div>
+                 <input type="submit" class="btn btn-primary" id="submit-global-conf" value="Submit"/>
+                 <input name="accountId" type="hidden" value="null" class="form-accountId"/>
+                 <input name="type" type="hidden" value="BUY"/>
+                </form>
+              </div>                       
+            </div>
        </div>
+       
        </div>
      </div>
 
     <script>
       require('./app.js');         
     </script>
-    <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../node_modules/jquery-ui-bundle/jquery-ui.theme.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css"/>     
+    <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    
      <input id="accountId" name="accountId" type="hidden" value="null"/>
+     
     </div>
   </body>
 </html>
