@@ -1,4 +1,4 @@
-/*var OANDAAdapter = require('oanda-adapter-v20');
+var OANDAAdapter = require('oanda-adapter-v20');
 var client = new OANDAAdapter({
     // 'live', 'practice' or 'sandbox'
     environment: 'practice',
@@ -6,14 +6,7 @@ var client = new OANDAAdapter({
     accessToken: 'ef341f419fd90a61daea143902dfbea8-57c5975686db1479da10cc247075a93a',    
 });
 
-client.getInstrumentsList("101-004-8382586-001",function(instruments){
-Object.keys(instruments).forEach(function(key) 
-                  {
-                    var instrumentLine = instruments[key];
-                    name = instrumentLine.name;                   
-                  });
-});*/
-/*var mysql = require('mysql');
+var mysql = require('mysql');
 var DBconnection = mysql.createConnection({
   host: "localhost",
   user: "oanda",
@@ -22,28 +15,36 @@ var DBconnection = mysql.createConnection({
   port: "3307"
 });
 
+function takeProfit()
+{
+  client.replaceTrade("101-004-8382586-001",75,{"takeProfit":{"price":"1.17664","timeInForce": "GTC",}},function(result)
+    {
+      if(typeof(result.takeProfitOrderTransaction.id) !== 'undefined')
+      {
+        setGlobalConf(20,{alreadyInvested:0});
+      }      
+    });
+}
+//takeProfit();
 
-DBconnection.connect(function(err) 
-{});
-DBconnection.query('INSERT INTO globalConfiguration SET ?', 
-                       {
-                         accountId: '101-004-8382586-001',
-                         type: 'BUY',
-                         instrument: 'EUR_USD',
-                         minPrice: '1.18014',
-                         maxPrice: '1.19014',
-                         takeProfit: '0.10',
-                         stopLoss: '0.20',
-                         maxUnits: '100',
-                         enabled: 'true'
-                       }
-, function (error, results, fields) {
-  if (error) throw error;
-  console.log(results.insertId);
-});*/
+function setGlobalConf(id,updateData)
+{    
+  DBconnection.query('UPDATE globalConfiguration SET ? WHERE ?', [updateData, { id: id }], function (error, results, fields) 
+  {
+    console.log(results.OkPacket)
+  });
+}
 
-const Noty = require('noty');
- 
-new Noty({
-    text: 'Notification text'
-}).show();
+function createTrade(instrument, units, confId)
+{
+  client.createOrder("101-004-8382586-001",{"order":{"units":units, "instrument": instrument, "timeInForce":"FOK", "type": "MARKET", "positionFill": "DEFAULT"}},function(result)
+    {
+      console.log(result);
+      if(typeof(result.takeProfitOrderTransaction.id) !== 'undefined')
+      {
+      //setGlobalConf(confId,{alreadyInvested:1});
+      }
+    });
+}
+
+createTrade("EUR_USD", "1", 20);

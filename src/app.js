@@ -1,3 +1,5 @@
+//developed by rockscripts
+
 window.$ = window.jQuery  = require( 'jquery' );
 var jui = require('jquery-ui-bundle');
 
@@ -26,7 +28,6 @@ var   api = new Oanda(configv2);
   node oanda does not work
 */
 var OANDAAdapter = require('oanda-adapter-v20');
-console.log(configv2.token)
 var client = new OANDAAdapter({
     // 'live', 'practice' or 'sandbox'
     environment: 'practice',
@@ -42,7 +43,7 @@ var request = api.accounts.getAccountsForUser();
 var dataSet = [];
 // Here we handle a successful response from the server
 request.success(function(data) { 
-  console.log(data)     
+     
      var accountsList = data.accounts;
      var index = 0; 
      var tmpObject = Object.keys(accountsList);
@@ -218,8 +219,6 @@ function fillTableGlobalConf()
   DBconnection.query("SELECT * FROM globalConfiguration WHERE accountId='"+accountID+"'", function (error, results, fields) 
   {
     if (error) throw error;
-    console.log(results);
-
     var index = 0; 
     var iconStatus = null;
     results.forEach(function(confRow) 
@@ -240,7 +239,7 @@ function fillTableGlobalConf()
 /*CODE UPDATE CURRENT PRICE FOR BID*/
 function updateLiveData()
 {
-  new CronJob('* 5 * * * *', function() 
+  new CronJob('* * * * * *', function() 
   {
   var accountId = jQuery("#accountId").val();
   var instruments =  ["EUR_USD"];
@@ -253,7 +252,6 @@ function updateLiveData()
           Object.keys(ratesprices).forEach(function(key) 
             {
               var rateLine = ratesprices[key];
-              console.log(rateLine)
                                
               var requestInstrumentHistory = api.rates.retrieveInstrumentHistory(["EUR_USD"],{count:1});
               requestInstrumentHistory.success(function(dataInstrumentHistory) 
@@ -264,14 +262,13 @@ function updateLiveData()
                 Object.keys(candles).forEach(function(key) 
                   {
                     var candleLine = candles[key];
-                    mid = candleLine.mid;
-                    console.log(candleLine);                    
+                    mid = candleLine.mid;                   
                   });
 
                   if(rateLine.instrument="EUR_USD")
                   {
-                    jQuery(".current-price-EUR_USD").html(rateLine.bids[0].price);//update current price
-                    jQuery(".current-price-EUR_USD").each(function( index ) 
+                    jQuery(".current-price-"+rateLine.instrument).html(rateLine.bids[0].price);//update current price
+                    jQuery(".current-price-"+rateLine.instrument).each(function( index ) 
                     {
                      var currentPrice = jQuery(this).text();
                      var tradeUnit = jQuery(this).attr("trade-unit");
@@ -285,13 +282,34 @@ function updateLiveData()
                      var profit = (currentPrice - tradePrice) * tradeUnit;
                      var nowDateTime = new Date();
                      nowDateTime = formatDate(nowDateTime, "dddd h:mmtt d MMM yyyy");
-                     var takeProfitPrice = sumeFloat(currentPrice,0.00008);
-                     if(profit>0.10)
+                     getGlobalConf("BUY",rateLine.instrument,function(globalConf)
                      {
-                       takeProfit(tradeId, takeProfitPrice);//require above current price
-                     //  var notificationDate = new Date().today() + " @ " + new Date().timeNow();
-                       sendNotification("Take Profit Requested","Trade ID: "+tradeId +"\n"+"Taked at: "+takeProfitPrice+"\n"+"Date: "+nowDateTime);
-                     }
+                       console.log(globalConf)
+                       //Take profit based on instrument configuration
+                        if(globalConf!=null)
+                        {
+                          var takeProfitPrice = sumeFloat(currentPrice,0.00008);
+                          if(profit > globalConf.takeProfit)
+                          {
+                            takeProfit(tradeId, takeProfitPrice, globalConf.id);//require above current price   
+                            //sendNotification("Take Profit Requested","Trade ID: "+tradeId +"\n"+"Taked at: "+takeProfitPrice+"\n"+"Date: "+nowDateTime);                          
+                            displayNotification("success","taked profit "+tradeId)
+                          }
+                          //Stop loss based on instrument configuration
+                        
+                        /*IS TIME TO AUTO INVEST?*/
+                        console.log(globalConf.minPrice+" > "+currentPrice+" < "+globalConf.maxPrice);
+                        
+                        if(currentPrice > globalConf.minPrice && currentPrice < globalConf.maxPrice)                  
+                        {
+                          if(globalConf.alreadyInvested == 0)
+                          {
+                            createTrade(rateLine.instrument, globalConf.maxUnits, globalConf.id);
+                            displayNotification("success","trade created")
+                          }
+                        }
+                        }                      
+                     });                     
                       var base_currency = rateLine.instrument.split("_");
                       base_currency = base_currency[0];
                       jQuery(".trade-profit-"+currentIndex).text(currencyFormatter.format(profit, { code: base_currency }));
@@ -299,10 +317,9 @@ function updateLiveData()
                   }
               });
               requestInstrumentHistory.error(function(err) {           
-                console.log('ERROR[RATES LIST]: ', err);
-              });
+                                                              console.log('ERROR[RATES LIST]: ', err);
+                                                            });
               requestInstrumentHistory.go();
-
             });
         });
         requestCurrentPrices.error(function(err) {           
@@ -311,6 +328,41 @@ function updateLiveData()
         requestCurrentPrices.go();
       }, null, true, 'America/Bogota');
         
+}
+
+function createTrade(instrument, units, confId)
+{
+  var accountID = jQuery("#accountId").val();  
+  client.createOrder(accountID,{"order":{"units":units, "instrument": instrument, "timeInForce":"FOK", "type": "MARKET", "positionFill": "DEFAULT"}},function(result)
+    {
+      console.log(result);
+      if(typeof(result.orderCancelTransaction) == 'undefined')
+      {
+       setGlobalConf(confId,{alreadyInvested:1});
+      }
+    });
+}
+
+function getGlobalConf(type,instrument,callback)
+{
+  var accountID = jQuery("#accountId").val();    
+  DBconnection.query("SELECT * FROM globalConfiguration WHERE accountId='"+accountID+"' AND type='"+type+"' AND instrument='"+instrument+"'", function (error, results, fields) 
+  {
+    if(typeof(results[0]) !== 'undefined')
+    { 
+        return callback(results[0]);
+       
+    }      
+    else
+      return callback(null);
+  });
+}
+function setGlobalConf(id,updateData)
+{    
+  DBconnection.query('UPDATE globalConfiguration SET ? WHERE ?', [updateData, { id: id }], function (error, results, fields) 
+  {
+    
+  });
 }
 
 function sumeFloat(a,b)
@@ -330,19 +382,21 @@ var sec = a.getSeconds();
 var time = date + '/' + month + '/' + year + ' ' + hour + ':' + min + ':' + sec ;
 return time;
 }
-function takeProfit(tradeId, currentPrice)
+function takeProfit(tradeId, currentPrice, confId)
 {
   var accountId = jQuery("#accountId").val();
   client.replaceTrade(accountId,tradeId,{"takeProfit":{"price":currentPrice,"timeInForce": "GTC",}},function(data)
     {
+      setGlobalConf(confId,{alreadyInvested:0});
+      displayNotification("success","#"+tradeId+" Profit taked");
     });
 }
 function sendNotification(subject,message)
 {
   var email 	= require("emailjs");
 var server 	= email.server.connect({
-   user:    "rockscripts@gmail.com", 
-   password:"Rock!123", 
+   user:    "", 
+   password:"", 
    host:    "smtp.gmail.com", 
    ssl:     true
 });
