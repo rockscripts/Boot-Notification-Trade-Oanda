@@ -84,7 +84,7 @@
                  </div>  
                  <div class="form-check">
                     <input name="enabled" type="checkbox" class="filled-in form-check-input" id="enableConf" checked="checked">
-                    <label class="form-check-label" for="enableConf">Enable/Disable</label>
+                    <label class="form-check-label" for="enableConf">Status</label>
                 </div> 
                 <br> 
                  <div class="btn btn-close-custom closeForm-addGlobalConfigurationBUYoportunity">Cancel</div>
@@ -93,6 +93,27 @@
                  <input name="type" type="hidden" value="BUY"/>
                 </form>
               </div>                       
+            </div>
+
+            <div class="buy-global-configuration">
+              <br>
+              <table class="table table-dark" id="tableGlobalConf">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col sortable=true">Instrument</th>
+                    <th scope="col sortable">Min. Price</th>
+                    <th scope="col sortable">Max. Price</th>
+                    <th scope="col sortable">Take profit</th>
+                    <th scope="col sortable">Stop loss</th>
+                    <th scope="col sortable">Max. Units</th>
+                    <th scope="col sortable">Status</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
             </div>
        </div>
        
@@ -105,8 +126,9 @@
     <link rel="stylesheet" href="../node_modules/jquery-ui-bundle/jquery-ui.theme.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css"/>     
     <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
-    
-     <input id="accountId" name="accountId" type="hidden" value="null"/>
+    <link href="../node_modules/noty/lib/noty.css" rel="stylesheet">
+    <link href="../node_modules/noty/lib/themes/relax.css" rel="stylesheet">
+    <input id="accountId" name="accountId" type="hidden" value="null"/>
      
     </div>
   </body>

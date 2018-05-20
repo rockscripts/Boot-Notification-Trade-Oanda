@@ -10,12 +10,12 @@ var DBconnection = mysql.createConnection({
   port: "3307"
 });
 
+var Noty = require('noty');
 var Oanda = require('node-oanda');
 var dt = require('datatables.net-responsive')( window, jQuery );
 var fa = require("fontawesome");
 var serialize = require('dom-form-serializer').serialize
 var currencyFormatter = require('currency-formatter');
-
 var CronJob = require('cron').CronJob;
 
 const remote = window.require('electron').remote;
@@ -34,6 +34,8 @@ var client = new OANDAAdapter({
     accessToken: configv2.token,    
 });
 
+/*DATA TABLES*/
+var tableGlobalConf = jQuery("#tableGlobalConf");
 
 /*ACCOUNTS CODE*/
 var request = api.accounts.getAccountsForUser();
@@ -54,7 +56,7 @@ request.success(function(data) {
         requestAccountDetails.success(function(dataAccount) 
         {              
             var accountDetails = dataAccount.account;   
-            var row = [accountDetails.id,accountDetails.alias,currencyFormatter.format(accountDetails.balance, { code: accountDetails.currency }),"<img src='../assets/images/056-profits-6.png' class='icons open-trading' id='"+accountDetails.id+"' />"]; ;
+            var row = [accountDetails.id,accountDetails.alias,currencyFormatter.format(accountDetails.balance, { code: accountDetails.currency }),"<img src='../assets/images/exchange.png' class='icons open-trading' id='"+accountDetails.id+"' />"]; ;
             dataSet[index] = row;
             
             if(index == tmpObject.length-1)
@@ -107,8 +109,8 @@ requestTrades.success(function(dataTrades)
   Object.keys(tradesList).forEach(function(key) 
   {
     var tradeLine = tradesList[key];
-    var row = [tradeLine.id,tradeLine.instrument,tradeLine.currentUnits,tradeLine.price,"<span class='current-price-"+tradeLine.instrument+"' trade-unit='"+tradeLine.currentUnits+"' trade-price='"+tradeLine.price+"' index='"+index+"' trade-id='"+tradeLine.id+"'></span>","<span class='trade-profit-"+index+"'></span>",timeConverter(tradeLine.openTime),"<img src='../assets/images/056-profits-6.png' class='icons' id='"+tradeLine.id+"' />"]; ;
-    console.log(tradeLine)
+    var row = [tradeLine.id,tradeLine.instrument,tradeLine.currentUnits,tradeLine.price,"<span class='current-price-"+tradeLine.instrument+"' trade-unit='"+tradeLine.currentUnits+"' trade-price='"+tradeLine.price+"' index='"+index+"' trade-id='"+tradeLine.id+"'></span>","<span class='trade-profit-"+index+"'></span>",timeConverter(tradeLine.openTime),"<img src='../assets/images/settings-row.png' class='icons' id='"+tradeLine.id+"' title='Configure this trade' />"]; ;
+    
     dataSet[index] = row;
       
     if(index == tmpObject.length-1) 
@@ -159,6 +161,7 @@ jQuery(document).on("click",".goGlobalConfiguration",function()
  });
  jQuery("#addGlobalConfigurationBUYoportunity").addClass("hide");
  tradeConfiguration.dialog("open");
+ fillTableGlobalConf();
 });
 jQuery(document).on("click",".addBuyRowGlobal",function()
 { 
@@ -170,9 +173,10 @@ jQuery(document).on("click",".addBuyRowGlobal",function()
         var instrumentLine = instruments[key];
         instrumentsDropdown.append(jQuery("<option />").val(instrumentLine.name).text(instrumentLine.displayName));                  
       });
-  jQuery("#addGlobalConfigurationBUYoportunity").removeClass("hide");
-  jQuery(".addBuyRowGlobal").fadeOut("fast");
-  });
+      jQuery("#addGlobalConfigurationBUYoportunity").removeClass("hide");
+      jQuery(".addBuyRowGlobal").fadeOut("fast");
+      
+      });
   
 });
 jQuery(document).on("click",".closeForm-addGlobalConfigurationBUYoportunity",function()
@@ -183,19 +187,61 @@ jQuery(document).on("click",".closeForm-addGlobalConfigurationBUYoportunity",fun
 jQuery( "#addGlobalConfigurationBUYoportunity" ).submit(function( event ) 
 {
   event.preventDefault();
-  var object = serialize(document.querySelector('#addGlobalConfigurationBUYoportunity'))
-  console.log(object);  
+  var object = serialize(document.querySelector('#addGlobalConfigurationBUYoportunity'));  
   DBconnection.query('INSERT INTO globalConfiguration SET ?', object, function (error, results, fields) 
   {
     if (error) throw error;
-    console.log(results.insertId);
-  });  
-});
 
+    if(results.insertId > 0)
+    {
+      jQuery("#addGlobalConfigurationBUYoportunity").addClass("hide",function(){  buttonAddBuyConf.fadeIn(); });          
+      displayNotification("success",'Configuration saved');
+    } 
+  });  
+  fillTableGlobalConf();
+});
+function displayNotification(type,msn)
+{
+  //alert, success, warning, error, info/information
+  new Noty({
+    text: msn,
+    type: type,
+    layout: 'topRight',
+    theme: 'relax'
+  }).show();
+}
+function fillTableGlobalConf()
+{
+  tableGlobalConf.DataTable().destroy();
+  var accountID = jQuery("#accountId").val();  
+  var dataSet = [];      
+  DBconnection.query("SELECT * FROM globalConfiguration WHERE accountId='"+accountID+"'", function (error, results, fields) 
+  {
+    if (error) throw error;
+    console.log(results);
+
+    var index = 0; 
+    var iconStatus = null;
+    results.forEach(function(confRow) 
+    {
+
+      if(confRow.enabled=="0")
+      iconStatus = "<img src='../assets/images/switch-off.png' class='icons' title='This configuration is disabled' />";
+      else
+      var iconStatus = "<img src='../assets/images/switch-on.png' class='icons' title='This configuration is enabled' />";
+
+      var row = [confRow.id,confRow.instrument,confRow.minPrice,confRow.maxPrice,confRow.takeProfit,confRow.stopLoss,confRow.maxUnits,iconStatus,"<img src='../assets/images/pen.png' class='icons-small'/>"];
+      dataSet[index] = row;
+      index++;
+    });
+    tableGlobalConf.dataTable({data:dataSet});
+  });
+}
 /*CODE UPDATE CURRENT PRICE FOR BID*/
 function updateLiveData()
 {
-  new CronJob('* 5 * * * *', function() {
+  new CronJob('* 5 * * * *', function() 
+  {
   var accountId = jQuery("#accountId").val();
   var instruments =  ["EUR_USD"];
         var requestCurrentPrices = api.accounts.getCurrentPricesV2(accountId,instruments);

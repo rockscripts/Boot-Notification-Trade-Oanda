@@ -2,9 +2,15 @@
     {
         width: 40px;
         height: 40px;
-        cursor: pointer
+        cursor: pointer;
     }
-
+    .icons-small
+    {
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+        margin-top: 8px;
+    }
     body
     {
         display:none;

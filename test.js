@@ -13,7 +13,7 @@ Object.keys(instruments).forEach(function(key)
                     name = instrumentLine.name;                   
                   });
 });*/
-var mysql = require('mysql');
+/*var mysql = require('mysql');
 var DBconnection = mysql.createConnection({
   host: "localhost",
   user: "oanda",
@@ -25,11 +25,6 @@ var DBconnection = mysql.createConnection({
 
 DBconnection.connect(function(err) 
 {});
-DBconnection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
-  if (error) throw error;
-  console.log('The solution is: ', results[0].solution);
-});
-
 DBconnection.query('INSERT INTO globalConfiguration SET ?', 
                        {
                          accountId: '101-004-8382586-001',
@@ -45,4 +40,10 @@ DBconnection.query('INSERT INTO globalConfiguration SET ?',
 , function (error, results, fields) {
   if (error) throw error;
   console.log(results.insertId);
-});
+});*/
+
+const Noty = require('noty');
+ 
+new Noty({
+    text: 'Notification text'
+}).show();
