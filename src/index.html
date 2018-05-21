@@ -9,10 +9,10 @@
     <div style="margin:8px;">
 
     
-    <h1><img src="../assets/images/nut.png" class="logo"/>Trading Friendly<br>
+    <h1><img src="../assets/images/nut.png" class="logo"/>Trading on Oanda<br>
     
     </h1>
-    <small class="powered">Powered by OANDA</small>
+    <small class="powered">Developed by Rockscritps</small>
     <br>
      <div id="accountsList">
         <table class="table table-dark" id="tableAccounts">
@@ -53,10 +53,11 @@
                
               <div id="buy-global-configuration">
                 <h3>Take Invest Oportunity</h3>
-                <p>Add configurations for instruments</p>
+                <p class="add-element">Add configurations for instruments</p>
+                <p class="edit-element hide">Edit this configuration</p>
                 <img src="../assets/images/add.png" class="icons addBuyRowGlobal" id="addBuyRowGlobal" title="BUY / Add configuration for an instrument"/>
                 <div class="buy-row-global-configuration">
-                <form id="addGlobalConfigurationBUYoportunity" name="addGlobalConfigurationBUYoportunity" method="POST" class="hide">
+                <form id="addGlobalConfigurationBUYoportunity" name="addGlobalConfigurationBUYoportunity" method="POST" class="hide" action="add">
                     <div class="form-group">
                         <label>Instrument</label>
                         <select class="instruments form-control" id="instrumetns-dropdown" name="instrument">
@@ -64,28 +65,31 @@
                     </div>
                      <div class="form-group">
                         <label>Min. Price</label>
-                        <input name="minPrice" type="number" class="buy-min-price form-control" value="" placeholder="1.18014" step="0.00001"/>
+                        <input name="minPrice" id="minPrice" type="number" class="buy-min-price form-control" value="" placeholder="1.18014" step="0.00001"/>
                     </div>
                     <div class="form-group">
                       <label>Max. Price</label>
-                      <input name="maxPrice" type="number" class="buy-max-price form-control" value="" placeholder="1.19014" step="0.00001"/>
+                      <input name="maxPrice" id="maxPrice" type="number" class="buy-max-price form-control" value="" placeholder="1.19014" step="0.00001"/>
                     </div>
                     <div class="form-group">
                       <label>Take profit</label>
-                      <input name="takeProfit"  type="number" class="buy-take-profit-money form-control" value="" placeholder="0.10" step="0.00001"/>                  
+                      <input name="takeProfit" id="takeProfit"  type="number" class="buy-take-profit-money form-control" value="" placeholder="0.10" step="0.00001"/>                  
                   </div>    
                   <div class="form-group">
                     <label>Stop loss</label>
-                    <input name="stopLoss" type="number" class="buy-stop-loss-money form-control" value="" placeholder="1.0" step="0.00001"/>                 
+                    <input name="stopLoss" id="stopLoss" type="number" class="buy-stop-loss-money form-control" value="" placeholder="1.0" step="0.00001"/>                 
                  </div> 
                  <div class="form-group">
                     <label>Max. Units</label>
-                    <input name="maxUnits" type="number" class="buy-max-units-money form-control" value="" placeholder="100" />                 
+                    <input name="maxUnits" id="maxUnits" type="number" class="buy-max-units-money form-control" value="" placeholder="100" />                 
                  </div>  
-                 <div class="form-check">
-                    <input name="enabled" type="checkbox" class="filled-in form-check-input" id="enableConf" checked="checked">
-                    <label class="form-check-label" for="enableConf">Status</label>
-                </div> 
+                 <div class="form-group">
+                    <label>Status</label>
+                    <select class="form-control" id="enabled" name="enabled">
+                      <option value="1">Enabled</option>
+                      <option value="0">Disabled</option>
+                      </select>                
+                 </div>
                 <br> 
                  <div class="btn btn-close-custom closeForm-addGlobalConfigurationBUYoportunity">Cancel</div>
                  <input type="submit" class="btn btn-primary" id="submit-global-conf" value="Submit"/>

@@ -1,15 +1,17 @@
 //developed by rockscripts
-
 window.$ = window.jQuery  = require( 'jquery' );
 var jui = require('jquery-ui-bundle');
 
 var mysql = require('mysql');
-var DBconnection = mysql.createConnection({
+var DBPool = mysql.createPool(
+{
   host: "localhost",
   user: "oanda",
   password: "oanda123",
   database: "oanda",
-  port: "3307"
+  port: "3307",
+  acquireTimeout:90000,
+  waitForConnections:true
 });
 
 var Noty = require('noty');
@@ -82,6 +84,7 @@ var tradingMain  = jQuery("#traddingMain");
 var accountsList  = jQuery("#accountsList");
 var tradeConfiguration = jQuery("#tradeConfiguration");
 var buttonAddBuyConf = jQuery(".addBuyRowGlobal");
+var buttonEditGlobalConf = jQuery(".editGlobalConf");
 
 jQuery("body").css("display","inline");
 tradingMain.fadeOut();
@@ -98,7 +101,7 @@ accountsList.fadeOut( "fast", function() {
 tradingMain.fadeIn("slow");
 
 
-var requestTrades = api.trades.getListOfOpenTrades(accountID,{instrument: "EUR_USD"});
+var requestTrades = api.trades.getListOfOpenTrades(accountID/*,{instrument: "EUR_USD"}*/);
 requestTrades.success(function(dataTrades) 
 {
   var dataSet = [];
@@ -174,50 +177,118 @@ jQuery(document).on("click",".addBuyRowGlobal",function()
         var instrumentLine = instruments[key];
         instrumentsDropdown.append(jQuery("<option />").val(instrumentLine.name).text(instrumentLine.displayName));                  
       });
+      jQuery("#addGlobalConfigurationBUYoportunity").attr("action","add");
+      //jQuery("#instrumetns-dropdown").attr("disabled",false);
+      jQuery("#instrumetns-dropdown").val("EUR_USD");
+      jQuery("#minPrice").val("");
+      jQuery("#maxPrice").val("");
+      jQuery("#takeProfit").val("");
+      jQuery("#stopLoss").val("");
+      jQuery("#maxUnits").val("");
+      jQuery("#enabled").val(1);
+      jQuery("#submit-global-conf").val("Submit");
       jQuery("#addGlobalConfigurationBUYoportunity").removeClass("hide");
-      jQuery(".addBuyRowGlobal").fadeOut("fast");
-      
-      });
-  
+      jQuery(".addBuyRowGlobal").fadeOut("fast");      
+      });  
 });
+
+jQuery(document).on("click",".editGlobalConf",function()
+{ 
+  var instrumentsDropdown = jQuery("#instrumetns-dropdown");
+  var accoundId = jQuery("#accountId").val();
+  var confId = jQuery(this).attr("id");
+  client.getInstrumentsList(accoundId,function(instruments){
+  
+      jQuery("#addGlobalConfigurationBUYoportunity").removeClass("hide");
+      jQuery(".addBuyRowGlobal").fadeOut("fast"); 
+      jQuery(".add-element").fadeOut("fast"); 
+      jQuery(".edit-element").removeClass("hide");  
+      jQuery("#addGlobalConfigurationBUYoportunity").attr("action","edit");
+      jQuery("#addGlobalConfigurationBUYoportunity").attr("confId",confId);
+
+     getGlobalConfById(confId,function(rowConf)
+      {
+        jQuery("#instrumetns-dropdown").find('option').remove();
+        //jQuery("#instrumetns-dropdown").attr("disabled",true);
+        Object.keys(instruments).forEach(function(key) 
+          {
+            var instrumentLine = instruments[key];
+            if(rowConf.instrument == instrumentLine.name)
+            {
+              instrumentsDropdown.append(jQuery("<option />").val(instrumentLine.name).text(instrumentLine.displayName));
+            }
+                              
+          });
+        jQuery("#instrumetns-dropdown").val(rowConf.instrument);
+        jQuery("#minPrice").val(rowConf.minPrice);
+        jQuery("#maxPrice").val(rowConf.maxPrice);
+        jQuery("#takeProfit").val(rowConf.takeProfit);
+        jQuery("#stopLoss").val(rowConf.stopLoss);
+        jQuery("#maxUnits").val(rowConf.maxUnits);
+        jQuery("#enabled").val(rowConf.enabled);
+        jQuery("#submit-global-conf").val("Save");
+      });
+      
+    }); 
+});
+
 jQuery(document).on("click",".closeForm-addGlobalConfigurationBUYoportunity",function()
 {
   jQuery("#addGlobalConfigurationBUYoportunity").addClass("hide",function(){  buttonAddBuyConf.fadeIn(); });    
+  if(jQuery("#addGlobalConfigurationBUYoportunity").attr("action")=="edit")
+  {
+    jQuery(".add-element").fadeIn("fast"); 
+    jQuery(".edit-element").addClass("hide"); 
+  }
 });
 
 jQuery( "#addGlobalConfigurationBUYoportunity" ).submit(function( event ) 
 {
   event.preventDefault();
   var object = serialize(document.querySelector('#addGlobalConfigurationBUYoportunity'));  
-  DBconnection.query('INSERT INTO globalConfiguration SET ?', object, function (error, results, fields) 
+  var action = jQuery(this).attr("action");
+  if(action=="add")
   {
-    if (error) throw error;
-
-    if(results.insertId > 0)
+    DBPool.getConnection(function(err, connection) 
     {
-      jQuery("#addGlobalConfigurationBUYoportunity").addClass("hide",function(){  buttonAddBuyConf.fadeIn(); });          
-      displayNotification("success",'Configuration saved');
-    } 
-  });  
-  fillTableGlobalConf();
+      connection.query('INSERT INTO globalConfiguration SET ?', object, function (error, results, fields) 
+        {
+          connection.release();
+          if (error) throw error;
+  
+          if(results.insertId > 0)
+          {
+            jQuery("#addGlobalConfigurationBUYoportunity").addClass("hide",function(){  buttonAddBuyConf.fadeIn(); });          
+            displayNotification("success",'Configuration saved');   
+            fillTableGlobalConf();   
+            displayNotification("success","Configuration created.")    
+          } 
+        });  
+    });
+  }
+  if(action=="edit")
+  {
+    var confId = jQuery(this).attr("confId");
+    setGlobalConf(confId,object) ;
+    fillTableGlobalConf();  
+    displayNotification("success","Configuration saved.");
+    jQuery("#addGlobalConfigurationBUYoportunity").addClass("hide",function(){  buttonAddBuyConf.fadeIn(); });  
+    jQuery(".add-element").fadeIn("fast"); 
+    jQuery(".edit-element").addClass("hide");    
+  }
+  
 });
-function displayNotification(type,msn)
-{
-  //alert, success, warning, error, info/information
-  new Noty({
-    text: msn,
-    type: type,
-    layout: 'topRight',
-    theme: 'relax'
-  }).show();
-}
+
 function fillTableGlobalConf()
 {
   tableGlobalConf.DataTable().destroy();
   var accountID = jQuery("#accountId").val();  
-  var dataSet = [];      
-  DBconnection.query("SELECT * FROM globalConfiguration WHERE accountId='"+accountID+"'", function (error, results, fields) 
+  var dataSet = [];    
+  DBPool.getConnection(function(err, connection) 
+  {  
+    connection.query("SELECT * FROM globalConfiguration WHERE accountId='"+accountID+"'", function (error, results, fields) 
   {
+    connection.release();
     if (error) throw error;
     var index = 0; 
     var iconStatus = null;
@@ -229,43 +300,46 @@ function fillTableGlobalConf()
       else
       var iconStatus = "<img src='../assets/images/switch-on.png' class='icons' title='This configuration is enabled' />";
 
-      var row = [confRow.id,confRow.instrument,confRow.minPrice,confRow.maxPrice,confRow.takeProfit,confRow.stopLoss,confRow.maxUnits,iconStatus,"<img src='../assets/images/pen.png' class='icons-small'/>"];
+      var row = [confRow.id,confRow.instrument,confRow.minPrice,confRow.maxPrice,confRow.takeProfit,confRow.stopLoss,confRow.maxUnits,iconStatus,"<img src='../assets/images/pen.png' class='icons-small editGlobalConf' id='"+confRow.id+"'/>"];
       dataSet[index] = row;
       index++;
     });
     tableGlobalConf.dataTable({data:dataSet});
+    
   });
+});
 }
 /*CODE UPDATE CURRENT PRICE FOR BID*/
 function updateLiveData()
 {
-  new CronJob('* * * * * *', function() 
+  new CronJob('05 * * * * *', function() 
   {
   var accountId = jQuery("#accountId").val();
-  var instruments =  ["EUR_USD"];
+  var instruments =  "EUR_USD,XAU_USD";
         var requestCurrentPrices = api.accounts.getCurrentPricesV2(accountId,instruments);
         requestCurrentPrices.success(function(dataPrices) 
         {
+          
           var dataSet = [];
           var ratesprices = dataPrices.prices;
           var index = 0; 
           Object.keys(ratesprices).forEach(function(key) 
             {
               var rateLine = ratesprices[key];
-                               
-              var requestInstrumentHistory = api.rates.retrieveInstrumentHistory(["EUR_USD"],{count:1});
-              requestInstrumentHistory.success(function(dataInstrumentHistory) 
-              {
-                var candles = dataInstrumentHistory.candles;
+              console.log(rateLine);                 
+              //var requestInstrumentHistory = api.rates.retrieveInstrumentHistory(["EUR_USD"],{count:1});
+             // requestInstrumentHistory.success(function(dataInstrumentHistory) 
+             // {
+               // var candles = dataInstrumentHistory.candles;
                 var index = 0; 
                 var mid = null;
-                Object.keys(candles).forEach(function(key) 
+              /*  Object.keys(candles).forEach(function(key) 
                   {
                     var candleLine = candles[key];
                     mid = candleLine.mid;                   
-                  });
+                  });*/
 
-                  if(rateLine.instrument="EUR_USD")
+                 // if(rateLine.instrument=="EUR_USD.")
                   {
                     jQuery(".current-price-"+rateLine.instrument).html(rateLine.bids[0].price);//update current price
                     jQuery(".current-price-"+rateLine.instrument).each(function( index ) 
@@ -275,8 +349,8 @@ function updateLiveData()
                      var tradePrice = jQuery(this).attr("trade-price");
                      var tradeId = jQuery(this).attr("trade-id");
                      var currentIndex = jQuery(this).attr("index");
-                     var openingRate = mid.o;
-                     var closingRate = mid.c;//candles
+                     //var openingRate = mid.o;
+                     //var closingRate = mid.c;//candles
                      openingRate = rateLine.closeoutBid;
                      closingRate = rateLine.closeoutAsk;
                      var profit = (currentPrice - tradePrice) * tradeUnit;
@@ -288,26 +362,33 @@ function updateLiveData()
                        //Take profit based on instrument configuration
                         if(globalConf!=null)
                         {
+                          if(rateLine.instrument=="XAU_USD")
+                          var takeProfitPrice = sumeFloat(currentPrice,0.008);
+                          else
                           var takeProfitPrice = sumeFloat(currentPrice,0.00008);
+
                           if(profit > globalConf.takeProfit)
                           {
-                            takeProfit(tradeId, takeProfitPrice, globalConf.id);//require above current price   
-                            //sendNotification("Take Profit Requested","Trade ID: "+tradeId +"\n"+"Taked at: "+takeProfitPrice+"\n"+"Date: "+nowDateTime);                          
-                            displayNotification("success","taked profit "+tradeId)
+                            if(globalConf.alreadyInvested == 1)
+                            {
+                              takeProfit(tradeId, takeProfitPrice, globalConf.id);//require above current price   
+                              //sendNotification("Take Profit Requested","Trade ID: "+tradeId +"\n"+"Taked at: "+takeProfitPrice+"\n"+"Date: "+nowDateTime);                          
+                          //    displayNotification("success","taked profit "+tradeId)
+                            }                            
                           }
                           //Stop loss based on instrument configuration
                         
                         /*IS TIME TO AUTO INVEST?*/
                         console.log(globalConf.minPrice+" > "+currentPrice+" < "+globalConf.maxPrice);
                         
-                        if(currentPrice > globalConf.minPrice && currentPrice < globalConf.maxPrice)                  
-                        {
-                          if(globalConf.alreadyInvested == 0)
+                          if(currentPrice > globalConf.minPrice && currentPrice < globalConf.maxPrice)                  
                           {
-                            createTrade(rateLine.instrument, globalConf.maxUnits, globalConf.id);
-                            displayNotification("success","trade created")
+                            if(globalConf.alreadyInvested == 0)
+                            {
+                              createTrade(rateLine.instrument, globalConf.maxUnits, globalConf.id);
+                              //displayNotification("success","trade created")
+                            }
                           }
-                        }
                         }                      
                      });                     
                       var base_currency = rateLine.instrument.split("_");
@@ -315,11 +396,11 @@ function updateLiveData()
                       jQuery(".trade-profit-"+currentIndex).text(currencyFormatter.format(profit, { code: base_currency }));
                     });
                   }
-              });
-              requestInstrumentHistory.error(function(err) {           
-                                                              console.log('ERROR[RATES LIST]: ', err);
-                                                            });
-              requestInstrumentHistory.go();
+              //});
+              //requestInstrumentHistory.error(function(err) {           
+              //                                                console.log('ERROR[RATES LIST]: ', err);
+              //                                              });
+             // requestInstrumentHistory.go();
             });
         });
         requestCurrentPrices.error(function(err) {           
@@ -335,34 +416,82 @@ function createTrade(instrument, units, confId)
   var accountID = jQuery("#accountId").val();  
   client.createOrder(accountID,{"order":{"units":units, "instrument": instrument, "timeInForce":"FOK", "type": "MARKET", "positionFill": "DEFAULT"}},function(result)
     {
-      console.log(result);
-      if(typeof(result.orderCancelTransaction) == 'undefined')
-      {
-       setGlobalConf(confId,{alreadyInvested:1});
-      }
+     setGlobalConf(confId,{alreadyInvested:1});    
+    });
+}
+
+function takeProfit(tradeId, currentPrice, confId)
+{
+  var accountId = jQuery("#accountId").val();
+  console.log({"takeProfit":{"price":currentPrice,"timeInForce": "GTC",}})
+  client.replaceTrade(accountId,tradeId,{"takeProfit":{"price":currentPrice,"timeInForce": "GTC",}},function(data)
+    {
+      setGlobalConf(confId,{alreadyInvested:0});
+      displayNotification("success","#"+tradeId+" Profit taked");
     });
 }
 
 function getGlobalConf(type,instrument,callback)
 {
-  var accountID = jQuery("#accountId").val();    
-  DBconnection.query("SELECT * FROM globalConfiguration WHERE accountId='"+accountID+"' AND type='"+type+"' AND instrument='"+instrument+"'", function (error, results, fields) 
+  var accountID = jQuery("#accountId").val();   
+  DBPool.getConnection(function(err, connection) 
   {
-    if(typeof(results[0]) !== 'undefined')
-    { 
-        return callback(results[0]);
-       
-    }      
-    else
-      return callback(null);
+    connection.query("SELECT * FROM globalConfiguration WHERE accountId='"+accountID+"' AND type='"+type+"' AND instrument='"+instrument+"'", function (error, results, fields) 
+      {        
+        connection.release();
+        if(error==null)
+        {             
+            return callback(results[0]);       
+        }      
+        else
+        {          
+          return callback(null);
+        }     
+      });
+  });
+}
+function getGlobalConfById(id,callback)
+{
+  var accountID = jQuery("#accountId").val();   
+  DBPool.getConnection(function(err, connection) 
+  {
+    console.log("SELECT * FROM globalConfiguration WHERE id='"+id+"'")
+    connection.query("SELECT * FROM globalConfiguration WHERE id='"+id+"'", function (error, results, fields) 
+      {
+        console.log(results)
+        console.log(error)
+        connection.release();
+        if(error==null)
+        {             
+            return callback(results[0]);       
+        }      
+        else
+        {          
+          return callback(null);
+        }     
+      });
   });
 }
 function setGlobalConf(id,updateData)
 {    
-  DBconnection.query('UPDATE globalConfiguration SET ? WHERE ?', [updateData, { id: id }], function (error, results, fields) 
+  DBPool.getConnection(function(err, connection) 
   {
-    
+    connection.query('UPDATE globalConfiguration SET ? WHERE ?', [updateData, { id: id }], function (error, results, fields) 
+    {
+      connection.release(); 
+    })
   });
+}
+
+function displayNotification(type,msn)
+{
+  //alert, success, warning, error, info/information
+  new Noty({
+    text: msn,
+    type: type,
+    layout: 'topRight',
+    theme: 'relax'
+  }).show();
 }
 
 function sumeFloat(a,b)
@@ -382,15 +511,7 @@ var sec = a.getSeconds();
 var time = date + '/' + month + '/' + year + ' ' + hour + ':' + min + ':' + sec ;
 return time;
 }
-function takeProfit(tradeId, currentPrice, confId)
-{
-  var accountId = jQuery("#accountId").val();
-  client.replaceTrade(accountId,tradeId,{"takeProfit":{"price":currentPrice,"timeInForce": "GTC",}},function(data)
-    {
-      setGlobalConf(confId,{alreadyInvested:0});
-      displayNotification("success","#"+tradeId+" Profit taked");
-    });
-}
+
 function sendNotification(subject,message)
 {
   var email 	= require("emailjs");
