@@ -1,3 +1,9 @@
+<p>
+This application is a boot to buy and sell in gold market. It was tested in a practice account on Oanda platform and work as well.
+<br>
+Contact me for some help using it: <b>rockscripts@gmail.com</b>
+</p>
+
 <b>Components Used under MIT Licence</b>
 <ul>
 <li><a href="https://github.com/oanda/v20-javascript" target="_blank">Official Oanda v02</a></li>
