@@ -284,7 +284,6 @@ jQuery( "#addGlobalConfigurationBUYoportunity" ).submit(function( event )
             jQuery("#addGlobalConfigurationBUYoportunity").addClass("hide",function(){  buttonAddBuyConf.fadeIn(); });          
             displayNotification("success",'Configuration saved');   
             fillTableGlobalConf();   
-            displayNotification("success","Configuration created.")    
           } 
         });  
     });
@@ -341,6 +340,7 @@ function fillTableGlobalConf()
 /*CODE UPDATE CURRENT PRICE FOR BID*/
 function updateLiveData()
 {
+  x = 5;  // 5 Seconds
   new CronJob('* * * * * *', function() 
   {
   var accountId = jQuery("#accountId").val();
@@ -451,20 +451,21 @@ function updateLiveData()
               getGlobalConf("BUY",rateLine.instrument,function(globalConf)
               {
                   /*IS TIME TO AUTO INVEST?*/
-                  console.log(parseFloat(globalConf.minPrice)+" > "+parseFloat(rateLine.bids[0].price)+" < "+parseFloat(globalConf.maxPrice));
-                      
-                  if(parseFloat(rateLine.bids[0].price) > parseFloat(globalConf.minPrice) && parseFloat(rateLine.bids[0].price) < parseFloat(globalConf.maxPrice))                  
+                  if(globalConf!=null)
                   {
-                    //displayNotification("info","current price between")
-                    if(globalConf.enabled == 1)
+                    if(parseFloat(rateLine.bids[0].price) > parseFloat(globalConf.minPrice) && parseFloat(rateLine.bids[0].price) < parseFloat(globalConf.maxPrice))                  
                     {
-                      if(globalConf.alreadyInvested == 0)
-                      {        
-                                       
-                      createTrade(rateLine.instrument, globalConf.maxUnits, globalConf.id);
+                      //displayNotification("info","current price between")
+                      if(globalConf.enabled == 1)
+                      {
+                        if(globalConf.alreadyInvested == 0)
+                        {                                               
+                         createTrade(rateLine.instrument, globalConf.maxUnits, globalConf.id);
+                        }
                       }
-                    }
-                  }             
+                    }  
+                  }    
+                             
               });
             
             });
@@ -477,7 +478,6 @@ function updateLiveData()
         });
         requestCurrentPrices.go();
       }, null, true, 'America/Bogota');
-       
       
       new CronJob('05 * * * * *', function() 
       {
@@ -527,18 +527,21 @@ requestTrades.go();
 function createTrade(instrument, units, confId)
 {
   var accountID = jQuery("#accountId").val(); 
-  setGlobalConf(confId,{alreadyInvested:1},function(err, result)
+  if(jQuery(".current-price-"+instrument).length==0)
   {
-    if(result.affectedRows>0)
+    setGlobalConf(confId,{alreadyInvested:1},function(err, result)
     {
-      client.createOrder(accountID,{"order":{"units":units, "instrument": instrument, "timeInForce":"FOK", "type": "MARKET", "positionFill": "DEFAULT"}},function(result)
+      if(result.affectedRows>0)
       {
-          //displayNotification("success","# Create trade was requested 1");
-          displayNotification("success","# Create trade was requested");
-          updateDataTableTrades();       
-      });
-    }
-  });    
+        client.createOrder(accountID,{"order":{"units":units, "instrument": instrument, "timeInForce":"FOK", "type": "MARKET", "positionFill": "DEFAULT"}},function(result)
+        {
+            //displayNotification("success","# Create trade was requested 1");
+            displayNotification("success","# Create trade was requested");
+            updateDataTableTrades();       
+        });
+      }
+    }); 
+  }    
 }
 
 function takeProfit(tradeId, currentPrice, confId)

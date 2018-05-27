@@ -4,7 +4,9 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "pack": "build --dir",
+    "dist": "build"
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -18,6 +20,8 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "^2.0.0",
+    "electron-builder": "^20.14.7",
+    "electron-packager": "^12.1.0",
     "electron-reload": "^1.2.2"
   },
   "dependencies": {
@@ -40,6 +44,8 @@
     "node-notifier": "^5.2.1",
     "node-oanda": "^1.1.20",
     "noty": "^3.2.0-beta",
-    "oanda-adapter-v20": "^1.0.2"
+    "oanda-adapter-v20": "^1.0.2",
+    "popper.js": "^1.14.3",
+    "pretty": "^2.0.0"
   }
 }
