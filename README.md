@@ -1,7 +1,7 @@
 <p>
-This application is a boot to buy and sell in gold market. It was tested in a practice account on Oanda platform and work as well.
+This application is a boot to buy and sell in Forex markets using Oanda platform. It was tested in a practice account and it is stable.
 <br>
-Contact me for some help using it: <b>rockscripts@gmail.com</b>
+Contact me if you have any questions: <b>rockscripts@gmail.com</b>
 </p>
 
 <b>Components Used under MIT Licence</b>
