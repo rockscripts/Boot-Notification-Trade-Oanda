@@ -6,10 +6,10 @@ var mysql = require('mysql');
 var DBPool = mysql.createPool(
 {
   host: "localhost",
-  user: "oanda",
-  password: "oanda123",
+  user: "root",
+  password: "",
   database: "oanda",
-  port: "3307",
+  port: "3306",
   acquireTimeout:90000,
   waitForConnections:true
 });
@@ -30,6 +30,7 @@ var   api = new Oanda(configv2);
   node oanda does not work
 */
 var OANDAAdapter = require('oanda-adapter-v20');
+
 var client = new OANDAAdapter({
     // 'live', 'practice' or 'sandbox'
     environment: 'practice',
@@ -191,7 +192,8 @@ jQuery(document).on("click",".addBuyRowGlobal",function()
 { 
   var instrumentsDropdown = jQuery("#instrumetns-dropdown");
   var accoundId = jQuery("#accountId").val();
-  client.getInstrumentsList(accoundId,function(instruments){
+  client.getInstrumentsList(accoundId,function(error, instruments){
+   
   Object.keys(instruments).forEach(function(key) 
       {
         var instrumentLine = instruments[key];
@@ -208,8 +210,8 @@ jQuery(document).on("click",".addBuyRowGlobal",function()
       jQuery("#enabled").val(1);
       jQuery("#submit-global-conf").val("Submit");
       jQuery("#addGlobalConfigurationBUYoportunity").removeClass("hide");
-      jQuery(".addBuyRowGlobal").fadeOut("fast");      
-      });  
+      jQuery(".addBuyRowGlobal").fadeOut("fast");   
+      }); 
 });
 
 jQuery(document).on("click",".editGlobalConf",function()
@@ -217,7 +219,7 @@ jQuery(document).on("click",".editGlobalConf",function()
   var instrumentsDropdown = jQuery("#instrumetns-dropdown");
   var accoundId = jQuery("#accountId").val();
   var confId = jQuery(this).attr("id");
-  client.getInstrumentsList(accoundId,function(instruments){
+  client.getInstrumentsList(accoundId,function(error, instruments){
   
       jQuery("#addGlobalConfigurationBUYoportunity").removeClass("hide");
       jQuery(".addBuyRowGlobal").fadeOut("fast"); 
@@ -274,6 +276,7 @@ jQuery( "#addGlobalConfigurationBUYoportunity" ).submit(function( event )
   {
     DBPool.getConnection(function(err, connection) 
     {
+      
       connection.query('INSERT INTO globalConfiguration SET ?', object, function (error, results, fields) 
         {
           connection.release();
@@ -336,9 +339,99 @@ function fillTableGlobalConf()
   });
 });
 }
-
-/*CODE UPDATE CURRENT PRICE FOR BID*/
 function updateLiveData()
+{
+  var accountId = jQuery("#accountId").val();
+  var instruments = ["XAU_USD"] ;
+  console.log('updateLiveData');
+  new CronJob('* * * * * *', function() 
+  {
+    
+  client.getPrice(instruments, accountId, function(error, ratesprices)
+  {
+    console.log('Prices: '+ratesprices);
+    Object.keys(ratesprices).forEach(function(key) 
+      {
+        var rateLine = ratesprices[key];
+       
+        {
+          console.log('rateLine: '+rateLine);
+          jQuery(".current-price-"+rateLine.instrument).html(rateLine.bids[0].price);//update current price
+          jQuery(".current-price-"+rateLine.instrument).each(function( index ) 
+          {
+            
+           var currentPrice = rateLine.bids[0].price;
+           var tradeUnit = jQuery(this).attr("trade-unit");
+           var tradePrice = jQuery(this).attr("trade-price");
+           var tradeId = jQuery(this).attr("trade-id");
+           var currentIndex = jQuery(this).attr("index");
+           //var openingRate = mid.o;
+           //var closingRate = mid.c;//candles
+           openingRate = rateLine.closeoutBid;
+           closingRate = rateLine.closeoutAsk;
+           var profit = (parseFloat(currentPrice) - parseFloat(tradePrice)) * parseFloat(tradeUnit);
+           var nowDateTime = new Date();
+           nowDateTime = formatDate(nowDateTime, "dddd h:mmtt d MMM yyyy");
+
+           var base_currency = rateLine.instrument.split("_");
+           base_currency = base_currency[0];
+           jQuery(".trade-profit-"+currentIndex).text(currencyFormatter.format(profit, { code: base_currency }));
+
+           getGlobalConf("BUY",rateLine.instrument,function(globalConf)
+           {
+             console.log(globalConf)
+             //Take profit based on instrument configuration
+              if(globalConf!=null)
+              {
+                /*BEGIN TAKE PROFIT*/
+                if(rateLine.instrument=="XAU_USD")
+                var takeProfitPrice = sumeFloat(currentPrice,0.010);
+                else
+                var takeProfitPrice = sumeFloat(currentPrice,0.00008);
+
+                if(profit > globalConf.takeProfit)
+                {
+                  if(globalConf.alreadyInvested == 1)
+                  {
+                    if(globalConf.enabled)
+                    {
+                      takeProfit(tradeId, takeProfitPrice, globalConf.id);
+                    }
+                    //require above current price   
+                    //sendNotification("Take Profit Requested","Trade ID: "+tradeId +"\n"+"Taked at: "+takeProfitPrice+"\n"+"Date: "+nowDateTime);                          
+                //    displayNotification("success","taked profit "+tradeId)
+                  }                            
+                } 
+
+                /*END TAKE PROFIT*/
+                //Stop loss based on instrument configuration     
+                 /*BEGIN STOP LOSS*/
+                if(rateLine.instrument=="XAU_USD")
+                var stopLossPrice = restFloat(currentPrice,0.010);
+                else
+                var stopLossPrice = restFloat(currentPrice,0.00008);
+                
+                if(profit < (globalConf.stopLoss*(-1)))
+                {
+                  if(globalConf.alreadyInvested == 1)
+                  {
+                    if(globalConf.enabled)
+                    {
+                    stopLoss(tradeId, stopLossPrice, globalConf.id);
+                    }
+                  }                            
+                }
+              }                      
+           });                     
+            
+          });
+        }
+      });
+  });
+  }, null, true, 'America/Bogota');
+}
+/*CODE UPDATE CURRENT PRICE FOR BID*/
+function updateLiveData1()
 {
   x = 5;  // 5 Seconds
   new CronJob('* * * * * *', function() 
@@ -347,6 +440,7 @@ function updateLiveData()
   var instruments =  "EUR_USD,XAU_USD";
   
         var requestCurrentPrices = api.accounts.getCurrentPricesV2(accountId,instruments);
+       
         requestCurrentPrices.success(function(dataPrices) 
         {
 
