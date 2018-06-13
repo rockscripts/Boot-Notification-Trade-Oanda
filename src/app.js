@@ -330,7 +330,7 @@ function fillTableGlobalConf()
       else
       var iconStatus = "<img src='../assets/images/switch-on.png' class='icons' title='This configuration is enabled' />";
 
-      var row = [confRow.id,confRow.instrument,confRow.minPrice,confRow.maxPrice,confRow.takeProfit,confRow.stopLoss,confRow.maxUnits,iconStatus,"<img src='../assets/images/pen.png' class='icons-small editGlobalConf' id='"+confRow.id+"'/>"];
+      var row = [confRow.id,confRow.instrument,confRow.minPrice,confRow.maxPrice,confRow.sMinPrice,confRow.sMaxPrice,confRow.takeProfit,confRow.stopLoss,confRow.maxUnits,iconStatus,"<img src='../assets/images/pen.png' class='icons-small editGlobalConf' id='"+confRow.id+"'/>"];
       dataSet[index] = row;
       index++;
     });
@@ -342,7 +342,7 @@ function fillTableGlobalConf()
 function updateLiveData()
 {
   var accountId = jQuery("#accountId").val();
-  var instruments = ["XAU_USD"] ;
+  var instruments = ["XAU_USD","XAG_USD"] ;
   console.log('updateLiveData');
   new CronJob('* * * * * *', function() 
   {
@@ -558,6 +558,18 @@ function updateLiveData1()
                         }
                       }
                     }  
+                    if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.sMinPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.sMaxPrice))                  
+                    {
+                      console.log('start create trade sell '+accountGlobalConfRow.enabled);
+                      if(accountGlobalConfRow.enabled == 1)
+                      {
+                        if(accountGlobalConfRow.alreadyInvested == 0)
+                        {   
+                         //sell                                            
+                         createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
+                        }
+                      }
+                    } 
                   }    
                              
               });

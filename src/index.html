@@ -66,13 +66,21 @@
                         </select>
                     </div>
                      <div class="form-group">
-                        <label>Min. Price</label>
+                        <label>Buy Min. Price</label>
                         <input name="minPrice" id="minPrice" type="number" class="buy-min-price form-control" value="" placeholder="1.18014" step="0.00001"/>
                     </div>
                     <div class="form-group">
-                      <label>Max. Price</label>
+                      <label>Buy Max. Price</label>
                       <input name="maxPrice" id="maxPrice" type="number" class="buy-max-price form-control" value="" placeholder="1.19014" step="0.00001"/>
                     </div>
+                    <div class="form-group">
+                      <label>Sell Min. Price</label>
+                      <input name="sMinPrice" id="minPrice" type="number" class="sell-min-price form-control" value="" placeholder="1.18014" step="0.00001"/>
+                  </div>
+                  <div class="form-group">
+                    <label>Sell Max. Price</label>
+                    <input name="sMaxPrice" id="maxPrice" type="number" class="sell-max-price form-control" value="" placeholder="1.19014" step="0.00001"/>
+                  </div>
                     <div class="form-group">
                       <label>Take profit</label>
                       <input name="takeProfit" id="takeProfit"  type="number" class="buy-take-profit-money form-control" value="" placeholder="0.10" step="0.00001"/>                  
@@ -108,8 +116,10 @@
                   <tr>
                     <th scope="col">#</th>
                     <th scope="col sortable=true">Instrument</th>
-                    <th scope="col sortable">Min. Price</th>
-                    <th scope="col sortable">Max. Price</th>
+                    <th scope="col sortable">Min. Buy</th>
+                    <th scope="col sortable">Max. Buy</th>
+                    <th scope="col sortable">Min. Sell</th>
+                    <th scope="col sortable">Max. Sell</th>
                     <th scope="col sortable">Take profit</th>
                     <th scope="col sortable">Stop loss</th>
                     <th scope="col sortable">Max. Units</th>

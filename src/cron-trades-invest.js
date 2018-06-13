@@ -52,13 +52,26 @@ getAccountGlobalConf(accountId,'BUY',function(accountGlobalConf){
                   {
                     if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.minPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.maxPrice))                  
                     {
-                      console.log('start create trade');
+                      console.log('start create trade'+accountGlobalConfRow.enabled);
                       if(accountGlobalConfRow.enabled == 1)
                       {
                         if(accountGlobalConfRow.alreadyInvested == 0)
                         {   
-                         console.log('create trade');                                            
+                         //buy                                            
                          createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits, accountGlobalConfRow.id);
+                        }
+                      }
+                    }  
+
+                    if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.sMinPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.sMaxPrice))                  
+                    {
+                      console.log('start create trade sell '+accountGlobalConfRow.enabled);
+                      if(accountGlobalConfRow.enabled == 1)
+                      {
+                        if(accountGlobalConfRow.alreadyInvested == 0)
+                        {   
+                         //sell                                            
+                         createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
                         }
                       }
                     }  
