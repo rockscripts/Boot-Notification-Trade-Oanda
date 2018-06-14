@@ -1,6 +1,7 @@
 //developed by rockscripts
 window.$ = window.jQuery  = require( 'jquery' );
-var jui = require('jquery-ui-bundle');
+require('jquery-ui-bundle');
+var cjs = require('candlejs');
 
 var mysql = require('mysql');
 var DBPool = mysql.createPool(
@@ -45,8 +46,11 @@ var tableGlobalConf = jQuery("#tableGlobalConf");
 var request = api.accounts.getAccountsForUser();
 var dataSet = [];
 // Here we handle a successful response from the server
+
+
+
 request.success(function(data) { 
-     
+
      var accountsList = data.accounts;
      var index = 0; 
      var tmpObject = Object.keys(accountsList);
@@ -84,6 +88,7 @@ request.go();
 var tradingMain  = jQuery("#traddingMain");
 var accountsList  = jQuery("#accountsList");
 var tradeConfiguration = jQuery("#tradeConfiguration");
+var chartCandles = jQuery("#instrumentChartMain");
 var buttonAddBuyConf = jQuery(".addBuyRowGlobal");
 var buttonEditGlobalConf = jQuery(".editGlobalConf");
 var dataTableTrades = jQuery('#tableTrading');
@@ -124,7 +129,7 @@ requestTrades.success(function(dataTrades)
   Object.keys(tradesList).forEach(function(key) 
   {
     var tradeLine = tradesList[key];
-    var row = [tradeLine.id,tradeLine.instrument,tradeLine.currentUnits,tradeLine.price,"<span class='current-price-"+tradeLine.instrument+"' trade-unit='"+tradeLine.currentUnits+"' trade-price='"+tradeLine.price+"' index='"+index+"' trade-id='"+tradeLine.id+"'></span>","<span class='trade-profit-"+index+"'></span>",timeConverter(tradeLine.openTime),"<img src='../assets/images/settings-row.png' class='icons' id='"+tradeLine.id+"' title='Configure this trade' />"]; ;
+    var row = [tradeLine.id,tradeLine.instrument,tradeLine.currentUnits,tradeLine.price,"<span class='current-price-"+tradeLine.instrument+"' trade-unit='"+tradeLine.currentUnits+"' trade-price='"+tradeLine.price+"' index='"+index+"' trade-id='"+tradeLine.id+"'></span>","<span class='trade-profit-"+index+"'></span>",timeConverter(tradeLine.openTime),"<img src='../assets/images/analytics.png' instrument='"+tradeLine.instrument+"' class='icons open-graph' id='"+tradeLine.id+"' title='Open Graph for "+tradeLine.instrument+"' />"]; ;
     
     dataSet[index] = row;
       
@@ -706,12 +711,9 @@ function getGlobalConfById(id,callback)
 {
   var accountID = jQuery("#accountId").val();   
   DBPool.getConnection(function(err, connection) 
-  {
-    console.log("SELECT * FROM globalConfiguration WHERE id='"+id+"'")
+  {    
     connection.query("SELECT * FROM globalConfiguration WHERE id='"+id+"'", function (error, results, fields) 
       {
-        console.log(results)
-        console.log(error)
         connection.release();
         if(error==null)
         {             
@@ -880,3 +882,86 @@ function formatDate(date, format, utc) {
 
   return format;
 };
+
+function getCandleDateForCanvas(dateTime)
+{
+  if(dateTime.length>0)
+  {
+    var candleDateTime = dateTime.split("T");
+    
+    var candleDate = candleDateTime[0];
+    candleDate = candleDate.split('-');
+    var candleTime = candleDateTime[1];
+    candleTime = candleTime.split(':');
+    var candleHour = candleTime[0];
+    var candleMinute = candleTime[1].split('.');
+    candleMinute = candleMinute[0];
+    var dateTimeFormated = new Array();
+    dateTimeFormated['year'] = candleDate[0];
+    dateTimeFormated['month'] = candleDate[1];
+    dateTimeFormated['day'] = candleDate[2];
+    dateTimeFormated['hour'] = candleHour;
+    dateTimeFormated['minute'] = candleMinute;
+    return dateTimeFormated;
+  } 
+
+ 
+}
+function displayGraphicConf(idConf)
+{
+  getGlobalConfById(idConf,function(rowConf)
+  {
+    var instrument = rowConf.instrument;
+    
+    client.getInstruments(instrument,function(error, candles){
+     // console.log(candles)
+      if(error=='null')
+      {}
+      else
+      {   
+        var chart = new cjs.CandleChart();
+        var bars = new cjs.Bars('AAPL', 60000);                             
+
+       Object.keys(candles).forEach(function(key) 
+       {
+        var candle = candles[key];
+        console.log(candle)
+          bars.add(new Date(candle.time).getTime(), candle.mid.o, candle.mid.h, candle.mid.l, candle.mid.c, candle.volume);
+          chart.addSeries(bars);
+          chart.outputTo();
+          chart.render();
+          
+       });
+       chart.addSeries(bars);
+       //displayGraphicConf(1);
+       chart.outputTo(jQuery('#chart')[0]);
+       chart.render();
+       chartCandles.fadeIn();
+      /* chartCandles.dialog({
+        modal: true,
+        resizable: false,
+        title: ' Graph for '+instrument,
+        open: function(){
+          jQuery('.ui-dialog').css({
+                                    'width': $(window).width(),
+                                    'height': $(window).height(),
+                                    'left': '0px',
+                                    'top':'0px'
+                                  });
+          chartCandles.fadeIn();
+                        },
+        close: function()
+        {
+        }
+     }); */
+       
+      }
+    });
+  });
+}
+jQuery(document).ready(function(){
+  jQuery(document).on("click",".open-graph",function(){
+    displayGraphicConf(1);
+  })
+})
+

@@ -71,3 +71,7 @@
     }
     .btn-close-custom
     {background: #ccc;}
+    #instrumentChartMain
+    {
+        display: none;
+    }

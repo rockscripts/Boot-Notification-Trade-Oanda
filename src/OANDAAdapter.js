@@ -305,7 +305,7 @@ OandaAdapter.prototype.getInstruments = function (instrument,callback) {
 
     this._sendRESTRequest({
         method: "GET",
-        path: "/v3/instruments/"+instrument+"/candles?count=6&price=M&granularity=S5"
+        path: "/v3/instruments/"+instrument+"/candles?count=10&price=M&granularity=S5"
         /*"/v1/instruments?accountId=" + accountId + "&fields=" + ["instrument", "displayName", "pip", "maxTradeUnits", "precision", "maxTrailingStop", "minTrailingStop", "marginRate", "halted"].join("%2C")*/,
     },
     function (error, body, statusCode) {

@@ -56,7 +56,7 @@ client.getOpenTrades(accountId, function(error, trades)
              {
                /*BEGIN TAKE PROFIT*/
             /*  console.log(currentPrice);
-              console.log(countDecimals(currentPrice));
+              console.log(czzzzountDecimals(currentPrice));
               
                if(tradeLine.instrument=="XAU_USD")
                var takeProfitPrice = sumeFloat(currentPrice,0.010);
