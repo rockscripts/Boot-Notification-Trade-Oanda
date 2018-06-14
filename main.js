@@ -2,7 +2,7 @@
 const electron = require('electron')
 
 
-//require('electron-debug')({showDevTools: true});
+require('electron-debug')({showDevTools: false});
 // Module to control application life.
 const app = electron.app
 // Module to create native browser window.

@@ -255,6 +255,8 @@ jQuery(document).on("click",".editGlobalConf",function()
         jQuery("#maxPrice").val(rowConf.maxPrice);
         jQuery("#takeProfit").val(rowConf.takeProfit);
         jQuery("#stopLoss").val(rowConf.stopLoss);
+        jQuery("#sMinPrice").val(rowConf.sMinPrice);
+        jQuery("#sMaxPrice").val(rowConf.sMaxPrice);
         jQuery("#maxUnits").val(rowConf.maxUnits);
         jQuery("#enabled").val(rowConf.enabled);
         jQuery("#submit-global-conf").val("Save");
@@ -348,23 +350,21 @@ function fillTableGlobalConf()
   });
 });
 }
+
 function updateLiveData()
 {
   var accountId = jQuery("#accountId").val();
   var instruments = ["XAU_USD","XAG_USD"] ;
-  console.log('updateLiveData');
   new CronJob('* * * * * *', function() 
   {
     
   client.getPrice(instruments, accountId, function(error, ratesprices)
   {
-    console.log('Prices: '+ratesprices);
     Object.keys(ratesprices).forEach(function(key) 
       {
         var rateLine = ratesprices[key];
        
         {
-          console.log('rateLine: '+rateLine);
           jQuery(".current-price-"+rateLine.instrument).html(rateLine.bids[0].price);//update current price
           jQuery(".current-price-"+rateLine.instrument).each(function( index ) 
           {
@@ -388,7 +388,6 @@ function updateLiveData()
 
            getGlobalConf("BUY",rateLine.instrument,function(globalConf)
            {
-             console.log(globalConf)
              //Take profit based on instrument configuration
               if(globalConf!=null)
               {
@@ -439,166 +438,7 @@ function updateLiveData()
   });
   }, null, true, 'America/Bogota');
 }
-/*CODE UPDATE CURRENT PRICE FOR BID*/
-function updateLiveData1()
-{
-  x = 5;  // 5 Seconds
-  new CronJob('* * * * * *', function() 
-  {
-  var accountId = jQuery("#accountId").val();
-  var instruments =  "EUR_USD,XAU_USD";
-  
-        var requestCurrentPrices = api.accounts.getCurrentPricesV2(accountId,instruments);
-       
-        requestCurrentPrices.success(function(dataPrices) 
-        {
 
-          
-          var dataSet = [];
-          var ratesprices = dataPrices.prices;
-          var index = 0; 
-          Object.keys(ratesprices).forEach(function(key) 
-            {
-              var rateLine = ratesprices[key];
-              console.log(rateLine);                 
-              //var requestInstrumentHistory = api.rates.retrieveInstrumentHistory(["EUR_USD"],{count:1});
-             // requestInstrumentHistory.success(function(dataInstrumentHistory) 
-             // {
-               // var candles = dataInstrumentHistory.candles;
-                var index = 0; 
-                var mid = null;
-              /*  Object.keys(candles).forEach(function(key) 
-                  {
-                    var candleLine = candles[key];
-                    mid = candleLine.mid;                   
-                  });*/
-
-                 // if(rateLine.instrument=="EUR_USD.")
-                  {
-                    jQuery(".current-price-"+rateLine.instrument).html(rateLine.bids[0].price);//update current price
-                    jQuery(".current-price-"+rateLine.instrument).each(function( index ) 
-                    {
-                      
-                     var currentPrice = rateLine.bids[0].price;
-                     var tradeUnit = jQuery(this).attr("trade-unit");
-                     var tradePrice = jQuery(this).attr("trade-price");
-                     var tradeId = jQuery(this).attr("trade-id");
-                     var currentIndex = jQuery(this).attr("index");
-                     //var openingRate = mid.o;
-                     //var closingRate = mid.c;//candles
-                     openingRate = rateLine.closeoutBid;
-                     closingRate = rateLine.closeoutAsk;
-                     var profit = (parseFloat(currentPrice) - parseFloat(tradePrice)) * parseFloat(tradeUnit);
-                     var nowDateTime = new Date();
-                     nowDateTime = formatDate(nowDateTime, "dddd h:mmtt d MMM yyyy");
-
-                     var base_currency = rateLine.instrument.split("_");
-                     base_currency = base_currency[0];
-                     jQuery(".trade-profit-"+currentIndex).text(currencyFormatter.format(profit, { code: base_currency }));
-
-                     getGlobalConf("BUY",rateLine.instrument,function(globalConf)
-                     {
-                       console.log(globalConf)
-                       //Take profit based on instrument configuration
-                        if(globalConf!=null)
-                        {
-                          /*BEGIN TAKE PROFIT*/
-                          if(rateLine.instrument=="XAU_USD")
-                          var takeProfitPrice = sumeFloat(currentPrice,0.010);
-                          else
-                          var takeProfitPrice = sumeFloat(currentPrice,0.00008);
-
-                          if(profit > globalConf.takeProfit)
-                          {
-                            if(globalConf.alreadyInvested == 1)
-                            {
-                              if(globalConf.enabled)
-                              {
-                                takeProfit(tradeId, takeProfitPrice, globalConf.id);
-                              }
-                              //require above current price   
-                              //sendNotification("Take Profit Requested","Trade ID: "+tradeId +"\n"+"Taked at: "+takeProfitPrice+"\n"+"Date: "+nowDateTime);                          
-                          //    displayNotification("success","taked profit "+tradeId)
-                            }                            
-                          } 
-
-                          /*END TAKE PROFIT*/
-                          //Stop loss based on instrument configuration     
-                           /*BEGIN STOP LOSS*/
-                          if(rateLine.instrument=="XAU_USD")
-                          var stopLossPrice = restFloat(currentPrice,0.010);
-                          else
-                          var stopLossPrice = restFloat(currentPrice,0.00008);
-                          
-                          if(profit < (globalConf.stopLoss*(-1)))
-                          {
-                            if(globalConf.alreadyInvested == 1)
-                            {
-                              if(globalConf.enabled)
-                              {
-                              stopLoss(tradeId, stopLossPrice, globalConf.id);
-                              }
-                            }                            
-                          }
-                        }                      
-                     });                     
-                      
-                    });
-                  }
-              //});
-              //requestInstrumentHistory.error(function(err) {           
-              //                                                console.log('ERROR[RATES LIST]: ', err);
-              //                                              });
-             // requestInstrumentHistory.go();
-            
-              getGlobalConf("BUY",rateLine.instrument,function(globalConf)
-              {
-                  /*IS TIME TO AUTO INVEST?*/
-                  if(globalConf!=null)
-                  {
-                    if(parseFloat(rateLine.bids[0].price) > parseFloat(globalConf.minPrice) && parseFloat(rateLine.bids[0].price) < parseFloat(globalConf.maxPrice))                  
-                    {
-                      //displayNotification("info","current price between")
-                      if(globalConf.enabled == 1)
-                      {
-                        if(globalConf.alreadyInvested == 0)
-                        {                                               
-                         createTrade(rateLine.instrument, globalConf.maxUnits, globalConf.id);
-                        }
-                      }
-                    }  
-                    if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.sMinPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.sMaxPrice))                  
-                    {
-                      console.log('start create trade sell '+accountGlobalConfRow.enabled);
-                      if(accountGlobalConfRow.enabled == 1)
-                      {
-                        if(accountGlobalConfRow.alreadyInvested == 0)
-                        {   
-                         //sell                                            
-                         createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
-                        }
-                      }
-                    } 
-                  }    
-                             
-              });
-            
-            });
-            
-
-            
-        });
-        requestCurrentPrices.error(function(err) {           
-          console.log('ERROR[RATES LIST]: ', err);
-        });
-        requestCurrentPrices.go();
-      }, null, true, 'America/Bogota');
-      
-      new CronJob('05 * * * * *', function() 
-      {
-        updateDataTableTrades();
-      }, null, true, 'America/Bogota');  
-}
 function updateDataTableTrades()
 {
 var accountID = jQuery("#accountId").val();
@@ -940,23 +780,25 @@ function displayGraphicConf(instrument)
         resizable: false,
         title: ' Graph for '+instrument,
         open: function(){
-          jQuery('.ui-dialog').css({
-                                    'width': $(window).width(),
-                                    'height': $(window).height(),
-                                    'left': '0px',
-                                    'top':'0px'
-                                  });
-          jQuery("#traddingMainContent").fadeOut();
-          chartCandles.fadeIn();
-
+                          jQuery('.ui-dialog').css({
+                                                    'width': $(window).width(),
+                                                    'height': $(window).height(),
+                                                    'left': '0px',
+                                                    'top':'0px'
+                                                  });
+                          jQuery("#traddingMainContent").fadeOut(function(){
+                            jQuery(".trading-bar").fadeOut()
+                            chartCandles.fadeIn();
+                          });
+                          
                         },
         close: function()
         {
-          chartCandles.fadeOut();
-          jQuery("#traddingMainContent").fadeIn();
+          chartCandles.fadeOut();    
+          jQuery(".trading-bar").fadeIn();
+          jQuery("#traddingMainContent").fadeIn();       
         }
-     }); 
-       
+     });        
       }
     });
   /*});*/
