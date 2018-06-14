@@ -95,6 +95,10 @@ var dataTableTrades = jQuery('#tableTrading');
 jQuery("body").css("display","inline");
 tradingMain.fadeOut();
 
+jQuery(document).on("click",".open-graph",function(){
+  displayGraphicConf(jQuery(this).attr("instrument"));
+})
+
 jQuery(document).on("click",".open-trading",function(e)
 {    
 setAccountId = function (selector) {
@@ -907,14 +911,14 @@ function getCandleDateForCanvas(dateTime)
 
  
 }
-function displayGraphicConf(idConf)
+function displayGraphicConf(instrument)
 {
-  getGlobalConfById(idConf,function(rowConf)
-  {
-    var instrument = rowConf.instrument;
+  /*getGlobalConfById(idConf,function(rowConf)
+  {*/
+    var instrument = instrument;
     
-    client.getInstruments(instrument,function(error, candles){
-     // console.log(candles)
+      client.getInstruments(instrument,function(error, candles){
+     
       if(error=='null')
       {}
       else
@@ -925,19 +929,13 @@ function displayGraphicConf(idConf)
        Object.keys(candles).forEach(function(key) 
        {
         var candle = candles[key];
-        console.log(candle)
-          bars.add(new Date(candle.time).getTime(), candle.mid.o, candle.mid.h, candle.mid.l, candle.mid.c, candle.volume);
-          chart.addSeries(bars);
-          chart.outputTo();
-          chart.render();
-          
+        bars.add(new Date(candle.time).getTime(), candle.mid.o, candle.mid.h, candle.mid.l, candle.mid.c, candle.volume);          
        });
+
        chart.addSeries(bars);
-       //displayGraphicConf(1);
-       chart.outputTo(jQuery('#chart')[0]);
+       chart.outputTo(document.getElementById('chart'));
        chart.render();
-       chartCandles.fadeIn();
-      /* chartCandles.dialog({
+       jQuery("#instrumentChartMain").dialog({
         modal: true,
         resizable: false,
         title: ' Graph for '+instrument,
@@ -948,20 +946,18 @@ function displayGraphicConf(idConf)
                                     'left': '0px',
                                     'top':'0px'
                                   });
+          jQuery("#traddingMainContent").fadeOut();
           chartCandles.fadeIn();
+
                         },
         close: function()
         {
+          chartCandles.fadeOut();
+          jQuery("#traddingMainContent").fadeIn();
         }
-     }); */
+     }); 
        
       }
     });
-  });
+  /*});*/
 }
-jQuery(document).ready(function(){
-  jQuery(document).on("click",".open-graph",function(){
-    displayGraphicConf(1);
-  })
-})
-
