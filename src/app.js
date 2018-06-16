@@ -1,4 +1,5 @@
 //developed by rockscripts
+
 window.$ = window.jQuery  = require( 'jquery' );
 require('jquery-ui-bundle');
 var cjs = require('candlejs');
@@ -304,6 +305,7 @@ jQuery( "#addGlobalConfigurationBUYoportunity" ).submit(function( event )
   }
   if(action=="edit")
   {
+    console.log(object)
     var confId = jQuery(this).attr("confId");
     setGlobalConf(confId,object,function(err,result)
     {
@@ -531,6 +533,40 @@ function stopLoss(tradeId, currentPrice, confId)
     }  
   });
 }
+function bearBullCalculator(instrument)
+{
+  client.getInstruments(instrument,function(error, candles)
+  {
+    var Bull = 0;
+    var Bear = 0;
+    var DOJI = 0;
+    Object.keys(candles).forEach(function(key) 
+         {
+          var candle = candles[key];
+          var closeCandle = candle.mid.c; 
+          var openCandle  = candle.mid.o; 
+          
+          if(parseFloat(closeCandle) < parseFloat(openCandle))
+          {
+            Bear++;
+          }
+          else if(parseFloat(closeCandle) > parseFloat(openCandle))
+          {
+            Bull++;
+          }
+          else
+          {
+            DOJI++;
+          }
+         });
+  
+    var bu_beTotal = parseInt(Bull)+parseInt(Bear);
+    var bearPercent =  (parseInt(Bear)/bu_beTotal) * 100;
+    var bullPercent = (parseInt(Bull)/bu_beTotal) * 100;
+    return {bear: bearPercent, bull: bullPercent};
+  });
+}
+
 
 function getGlobalConf(type,instrument,callback)
 {
@@ -592,6 +628,7 @@ function setGlobalConfAccount(accountId,updateData, callback)
     })
   });
 }
+
 function displayNotification(type,msn)
 {
   //alert, success, warning, error, info/information
@@ -765,13 +802,33 @@ function displayGraphicConf(instrument)
       {   
         var chart = new cjs.CandleChart();
         var bars = new cjs.Bars('AAPL', 60000);                             
-
+        var Bull = 0;
+        var Bear = 0;
+        var DOJI = 0;
        Object.keys(candles).forEach(function(key) 
        {
         var candle = candles[key];
-        bars.add(new Date(candle.time).getTime(), candle.mid.o, candle.mid.h, candle.mid.l, candle.mid.c, candle.volume);          
+        bars.add(new Date(candle.time).getTime(), candle.mid.o, candle.mid.h, candle.mid.l, candle.mid.c, candle.volume);
+        var closeCandle = candle.mid.c; 
+        var openCandle  = candle.mid.o; 
+        
+        if(parseFloat(closeCandle) < parseFloat(openCandle))
+        {
+          Bear++;
+        }
+        else if(parseFloat(closeCandle) > parseFloat(openCandle))
+        {
+          Bull++;
+        }
+        else
+        {
+          DOJI++;
+        }         
        });
-
+       var bu_beTotal = parseInt(Bull)+parseInt(Bear);
+       var bearPercent =  (parseInt(Bear)/bu_beTotal) * 100;
+       var bullPercent = (parseInt(Bull)/bu_beTotal) * 100; 
+ 
        chart.addSeries(bars);
        chart.outputTo(document.getElementById('chart'));
        chart.render();
@@ -789,6 +846,8 @@ function displayGraphicConf(instrument)
                           jQuery("#traddingMainContent").fadeOut(function(){
                             jQuery(".trading-bar").fadeOut()
                             chartCandles.fadeIn();
+                            jQuery(".bull-value").text(Math.round(bullPercent)+"%");
+                            jQuery(".bear-value").text(Math.round(bearPercent)+"%");
                           });
                           
                         },

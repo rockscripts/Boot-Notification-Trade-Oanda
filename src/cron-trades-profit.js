@@ -123,6 +123,9 @@ client.getOpenTrades(accountId, function(error, trades)
               });
       });
   });
+  DBPool.end(function (err) {
+    // all connections in the pool have ended
+  });
 });
 
 function createTrade(instrument, units, confId)

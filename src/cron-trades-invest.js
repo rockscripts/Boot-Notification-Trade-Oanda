@@ -80,7 +80,9 @@ getAccountGlobalConf(accountId,'BUY',function(accountGlobalConf){
              // });
       });
       });
-  
+      DBPool.end(function (err) {
+        // all connections in the pool have ended
+      });
 });
     
   
