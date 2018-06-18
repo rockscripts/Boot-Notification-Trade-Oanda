@@ -108,13 +108,14 @@ setAccountId = function (selector) {
   return accountID;
 };
 var accountID = setAccountId($(this));
-setGlobalConfAccount(accountID,{enabled:0},function(err,result)
+
+/*setGlobalConfAccount(accountID,{enabled:0},function(err,result)
     {
       if(result.affectedRows>0)
       {
         displayNotification("info","Configurations for instruments has been disabled.")  
       }
-    }) ; 
+    }) ; */
 accountsList.fadeOut( "fast", function() {
 tradingMain.fadeIn("slow");
 
@@ -431,7 +432,35 @@ function updateLiveData()
                     }
                   }                            
                 }
-              }                      
+              } 
+              
+               /*IS TIME TO AUTO INVEST?*/
+               if(globalConf!=null)
+               {
+                 if(parseFloat(currentPrice) > parseFloat(globalConf.minPrice) && parseFloat(currentPrice) < parseFloat(globalConf.maxPrice))                  
+                 {
+                   if(globalConf.enabled == 1)
+                   {
+                     if(globalConf.alreadyInvested == 0)
+                     {   
+                      //buy                                            
+                      createTrade(globalConf.instrument, globalConf.maxUnits, globalConf.id);
+                     }
+                   }
+                 }  
+
+                 if(parseFloat(currentPrice) > parseFloat(globalConf.sMinPrice) && parseFloat(currentPrice) < parseFloat(globalConf.sMaxPrice))                  
+                 {
+                   if(globalConf.enabled == 1)
+                   {
+                     if(globalConf.alreadyInvested == 0)
+                     {   
+                      //sell                                            
+                      createTrade(globalConf.instrument, globalConf.maxUnits * (-1), globalConf.id);
+                     }
+                   }
+                 }  
+               }    
            });                     
             
           });

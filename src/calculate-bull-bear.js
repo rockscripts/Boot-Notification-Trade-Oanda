@@ -22,7 +22,7 @@ var client = new OANDAAdapter(
 /*
  get bear and bull percent for getting an indicator 
 */
-bearBullCalculator();
+bearBullCalculator('XAU_USD');
 function bearBullCalculator(instrument)
 {
   client.getInstruments(instrument,function(error, candles)
@@ -53,6 +53,7 @@ function bearBullCalculator(instrument)
     var bu_beTotal = parseInt(Bull)+parseInt(Bear);
     var bearPercent =  (parseInt(Bear)/bu_beTotal) * 100;
     var bullPercent = (parseInt(Bull)/bu_beTotal) * 100;
+    console.log({bear: bearPercent, bull: bullPercent})
     return {bear: bearPercent, bull: bullPercent};
   });
 }
