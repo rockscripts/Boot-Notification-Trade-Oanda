@@ -3,7 +3,6 @@
 window.$ = window.jQuery  = require( 'jquery' );
 require('jquery-ui-bundle');
 var cjs = require('candlejs');
-
 var mysql = require('mysql');
 var DBPool = mysql.createPool(
 {
@@ -344,7 +343,7 @@ function fillTableGlobalConf()
       else
       var iconStatus = "<img src='../assets/images/switch-on.png' class='icons' title='This configuration is enabled' />";
 
-      var row = [confRow.id,confRow.instrument,confRow.minPrice,confRow.maxPrice,confRow.sMinPrice,confRow.sMaxPrice,confRow.takeProfit,confRow.stopLoss,confRow.maxUnits,iconStatus,"<img src='../assets/images/pen.png' class='icons-small editGlobalConf' id='"+confRow.id+"'/>"];
+      var row = [confRow.id,confRow.instrument,confRow.minPrice,confRow.maxPrice,confRow.sMinPrice,confRow.sMaxPrice,confRow.takeProfit,confRow.stopLoss,confRow.maxUnits,iconStatus,"<img src='../assets/images/pen.png' class='icons-small editGlobalConf' id='"+confRow.id+"'/>"+"&nbsp;&nbsp;<img src='../assets/images/analytics.png' class='icons-small open-graph' instrument='"+confRow.instrument+"'/>"];
       dataSet[index] = row;
       index++;
     });
@@ -836,7 +835,8 @@ function displayGraphicConf(instrument)
                                                     'width': $(window).width(),
                                                     'height': $(window).height(),
                                                     'left': '0px',
-                                                    'top':'0px'
+                                                    'top':'0px',
+                                                    'position':'absolute'
                                                   });
                           jQuery("#traddingMainContent").fadeOut(function(){
                             jQuery(".trading-bar").fadeOut()
