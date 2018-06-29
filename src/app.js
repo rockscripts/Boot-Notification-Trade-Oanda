@@ -562,40 +562,6 @@ function stopLoss(tradeId, currentPrice, confId)
     }  
   });
 }
-function bearBullCalculator(instrument)
-{
-  client.getInstruments(instrument,function(error, candles)
-  {
-    var Bull = 0;
-    var Bear = 0;
-    var DOJI = 0;
-    Object.keys(candles).forEach(function(key) 
-         {
-          var candle = candles[key];
-          var closeCandle = candle.mid.c; 
-          var openCandle  = candle.mid.o; 
-          
-          if(parseFloat(closeCandle) < parseFloat(openCandle))
-          {
-            Bear++;
-          }
-          else if(parseFloat(closeCandle) > parseFloat(openCandle))
-          {
-            Bull++;
-          }
-          else
-          {
-            DOJI++;
-          }
-         });
-  
-    var bu_beTotal = parseInt(Bull)+parseInt(Bear);
-    var bearPercent =  (parseInt(Bear)/bu_beTotal) * 100;
-    var bullPercent = (parseInt(Bull)/bu_beTotal) * 100;
-    return {bear: bearPercent, bull: bullPercent};
-  });
-}
-
 
 function getGlobalConf(type,instrument,callback)
 {
@@ -823,7 +789,7 @@ function displayGraphicConf(instrument)
   {*/
     var instrument = instrument;
     
-      client.getInstruments(instrument,function(error, candles){
+      client.getInstruments(instrument,1000,'M1',function(error, candles){
      
       if(error=='null')
       {}

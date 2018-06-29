@@ -301,11 +301,11 @@ OandaAdapter.prototype.getStreamTransact = function (accountId, callback) {
         }
     });
 };
-OandaAdapter.prototype.getInstruments = function (instrument,callback) {
+OandaAdapter.prototype.getInstruments = function (instrument,count, granularity,callback) {
 
     this._sendRESTRequest({
         method: "GET",
-        path: "/v3/instruments/"+instrument+"/candles?count=10&price=M&granularity=S5"
+        path: "/v3/instruments/"+instrument+"/candles?count="+count+"&price=M&granularity="+granularity
         /*"/v1/instruments?accountId=" + accountId + "&fields=" + ["instrument", "displayName", "pip", "maxTradeUnits", "precision", "maxTrailingStop", "minTrailingStop", "marginRate", "halted"].join("%2C")*/,
     },
     function (error, body, statusCode) {

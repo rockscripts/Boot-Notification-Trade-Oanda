@@ -22,10 +22,26 @@ var client = new OANDAAdapter(
 /*
  get bear and bull percent for getting an indicator 
 */
-bearBullCalculator('XAU_USD');
-function bearBullCalculator(instrument)
+
+
+getGlobalConfInstruments(function(configurations){
+  if(configurations=='null')
+      {}
+      else
+      {
+        Object.keys(configurations).forEach(function(key) 
+       {
+          var configuration = configurations[key];
+          bearBullCalculator(configuration.instrument,function(objectData){
+          setGlobalConfByInstrument(configuration.instrument,objectData, function(){});
+         });    
+       });
+      }  
+
+});
+function bearBullCalculator(instrument,callback)
 {
-  client.getInstruments(instrument,function(error, candles)
+  client.getInstruments(instrument,1000,'M1',function(error, candles)
   {
     var Bull = 0;
     var Bear = 0;
@@ -53,7 +69,36 @@ function bearBullCalculator(instrument)
     var bu_beTotal = parseInt(Bull)+parseInt(Bear);
     var bearPercent =  (parseInt(Bear)/bu_beTotal) * 100;
     var bullPercent = (parseInt(Bull)/bu_beTotal) * 100;
-    console.log({bear: bearPercent, bull: bullPercent})
-    return {bear: bearPercent, bull: bullPercent};
+    return callback({bear: bearPercent, bull: bullPercent}) ;
+  });
+}
+
+function getGlobalConfInstruments(callback)
+{  
+  DBPool.getConnection(function(err, connection) 
+  {    
+    connection.query("SELECT DISTINCT instrument FROM globalConfiguration", function (error, results, fields) 
+      {
+        connection.release();
+        if(error==null)
+        {             
+            return callback(results);       
+        }      
+        else
+        {          
+          return callback(null);
+        }     
+      });
+  });
+}
+function setGlobalConfByInstrument(instrument,updateData, callback)
+{    
+  DBPool.getConnection(function(err, connection) 
+  {
+    connection.query('UPDATE globalConfiguration SET ? WHERE ?', [updateData, { instrument: instrument }], function (error, results) 
+    {
+      connection.release(); 
+      return callback(error, results)
+    })
   });
 }

@@ -34,23 +34,18 @@ CREATE TABLE `globalConfiguration` (
   `instrument` varchar(250) COLLATE utf8_bin NOT NULL,
   `minPrice` varchar(250) COLLATE utf8_bin NOT NULL,
   `maxPrice` varchar(250) COLLATE utf8_bin NOT NULL,
+  `sMinPrice` varchar(250) COLLATE utf8_bin NOT NULL,
+  `sMaxPrice` varchar(250) COLLATE utf8_bin NOT NULL,
   `takeProfit` varchar(250) COLLATE utf8_bin NOT NULL,
   `stopLoss` varchar(250) COLLATE utf8_bin NOT NULL,
   `maxUnits` int(11) NOT NULL,
   `alreadyInvested` int(11) NOT NULL DEFAULT '0',
   `enabled` int(5) NOT NULL DEFAULT '0',
-  `type` varchar(200) COLLATE utf8_bin NOT NULL
+  `type` varchar(200) COLLATE utf8_bin NOT NULL,
+  `bull` varchar(200) COLLATE utf8_bin  NULL,
+  `bear` varchar(200) COLLATE utf8_bin  NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
---
--- Dumping data for table `globalConfiguration`
---
-
-INSERT INTO `globalConfiguration` (`id`, `accountId`, `instrument`, `minPrice`, `maxPrice`, `takeProfit`, `stopLoss`, `maxUnits`, `alreadyInvested`, `enabled`, `type`) VALUES
-(1, '101-004-8382586-002', 'XAU_USD', '1294.001', '1295.401', '4', '10', 3, 1, 1, 'BUY'),
-(2, '101-004-8382586-002', 'XAG_USD', '16.84914', '16.85214', '5', '10', 1, 1, 1, 'BUY'),
-(3, '101-004-8382586-001', 'XAU_USD', '1295.001', '1295.401', '0.22', '10', 3, 0, 1, 'BUY'),
-(4, '101-004-8382586-001', 'XAG_USD', '16.84914', '16.85214', '5', '1', 1, 0, 1, 'BUY');
 
 --
 -- Indexes for dumped tables
