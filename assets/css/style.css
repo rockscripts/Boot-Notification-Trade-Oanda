@@ -77,3 +77,11 @@
         text-align: center;
     padding-top: 20px;
     }
+    .transactions-container
+    {
+        display: none;
+    }
+    .profits
+    {color:green}
+    .losses
+    {color:red}

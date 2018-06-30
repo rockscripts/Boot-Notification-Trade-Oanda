@@ -64,7 +64,7 @@ request.success(function(data) {
         requestAccountDetails.success(function(dataAccount) 
         {              
             var accountDetails = dataAccount.account;   
-            var row = [accountDetails.id,accountDetails.alias,currencyFormatter.format(accountDetails.balance, { code: accountDetails.currency }),"<img src='../assets/images/exchange.png' class='icons open-trading' id='"+accountDetails.id+"' />"]; ;
+            var row = [accountDetails.id,accountDetails.alias,currencyFormatter.format(accountDetails.balance, { code: accountDetails.currency }),"<img src='../assets/images/exchange.png' class='icons open-trading' id='"+accountDetails.id+"' />"+"&nbsp&nbsp<img src='../assets/images/transaction.png' class='icons open-transactions' id='"+accountDetails.id+"' />"]; ;
             dataSet[index] = row;
             
             if(index == tmpObject.length-1)
@@ -156,6 +156,33 @@ requestTrades.success(function(dataTrades)
 });
 requestTrades.go();
 });    
+});
+
+
+jQuery(document).on("click",".open-transactions",function()
+{   
+  var accountID = jQuery(this).attr("id") ;
+  fillTableTransactions(accountID);
+  jQuery(".transactions-container").dialog({
+    modal: true,
+    resizable: false,
+    title: 'Transactions',
+    open: function(){
+                      jQuery('.ui-dialog').css({
+                                                'width': $(window).width(),
+                                                'height': $(window).height(),
+                                                'left': '0px',
+                                                'top':'0px',
+                                                'position':'absolute'
+                                              });
+                                              jQuery(".transactions-container").fadeIn();
+                     
+                    },
+    close: function()
+    {
+      jQuery(".transactions-container").fadeOut();     
+    }
+ }); 
 });
 
 jQuery(document).on("click",".goBackAccounts",function(){   
@@ -352,7 +379,41 @@ function fillTableGlobalConf()
   });
 });
 }
+function fillTableTransactions(accountID)
+{
+  jQuery("#tableTransactions").DataTable().destroy();
+  var accountID = accountID;  
+  var dataSet = [];    
+  DBPool.getConnection(function(err, connection) 
+  {  
+    connection.query("SELECT * FROM transactionPL WHERE accountID='"+accountID+"'", function (error, results, fields) 
+  {
+    connection.release();
+    if (error) throw error;
+    var index = 0; 
+    results.forEach(function(transaction) 
+    {
+      var pl = transaction.pl;
+      if(transaction.reason=="TAKE_PROFIT_ORDER")
+           pl = "<span class='profits'>"+pl+"</span>";
+      else
+           pl = "<span class='losses'>"+pl+"</span>";
 
+      var time = transaction.time;
+      var dateTimeParts = time.split("T");
+      var niceDate = dateTimeParts[0];
+      var timePart = dateTimeParts[1];
+      timePart = timePart.split(".")
+      var niceTime = timePart[0];
+      var row = [transaction.orderID,transaction.instrument,transaction.units,pl,niceDate+" at "+niceTime];
+      dataSet[index] = row;
+      index++;
+    });
+    jQuery("#tableTransactions").dataTable({data:dataSet});
+    
+  });
+});
+}
 function updateLiveData()
 {
   var accountId = jQuery("#accountId").val();
@@ -620,6 +681,24 @@ function setGlobalConfAccount(accountId,updateData, callback)
       connection.release(); 
       return callback(error, results)
     })
+  });
+}
+function getAccountTransactions(account,callback)
+{  
+  DBPool.getConnection(function(err, connection) 
+  {    
+    connection.query("SELECT * FROM transactionPL WHERE accountID='"+account+"'", function (error, results, fields) 
+      {
+        connection.release();
+        if(error==null)
+        {             
+            return callback(results);       
+        }      
+        else
+        {          
+          return callback(null);
+        }     
+      });
   });
 }
 
