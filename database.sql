@@ -71,3 +71,22 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+--
+-- Table structure for table `transactionPL`
+--
+
+CREATE TABLE `transactionPL` (
+  `orderID` int(11) NOT NULL,
+  `instrument` varchar(100) NOT NULL,
+  `units` int(11) NOT NULL,
+  `pl` varchar(200) NOT NULL,
+  `reason` varchar(100) NOT NULL,
+  `accountID` varchar(250) NOT NULL,
+  `time` varchar(250) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+--
+-- Indexes for table `transactionPL`
+--
+ALTER TABLE `transactionPL`
+  ADD PRIMARY KEY (`orderID`);
