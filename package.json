@@ -22,6 +22,7 @@
     "electron": "^2.0.0",
     "electron-builder": "^20.14.7",
     "electron-packager": "^12.1.0",
+    "electron-rebuild": "^1.7.3",
     "electron-reload": "^1.2.2"
   },
   "dependencies": {
@@ -48,6 +49,7 @@
     "oanda-adapter-v20": "^1.0.2",
     "popper.js": "^1.14.3",
     "pretty": "^2.0.0",
-    "techan-js": "^1.0.2"
+    "techan-js": "^1.0.2",
+    "technicalindicators": "^1.1.11"
   }
 }

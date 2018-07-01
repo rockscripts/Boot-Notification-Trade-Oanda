@@ -16,12 +16,40 @@ var DBPool = mysql.createPool(
 });
 
 var Noty = require('noty');
-var Oanda = require('node-oanda');
 var dt = require('datatables.net-responsive')( window, jQuery );
-var fa = require("fontawesome");
+var Oanda = require('node-oanda');
 var serialize = require('dom-form-serializer').serialize
 var currencyFormatter = require('currency-formatter');
 var CronJob = require('cron').CronJob;
+
+
+var Dygraph = require('dygraphs');
+
+jQuery(document).ready(function(){
+  var fs = require('fs');
+  var csv = require('fast-csv');
+  var accountId = "101-004-8382586-003";
+  var clientCSVPath = __dirname+"/indicators-csv/"+accountId;
+  fs.createReadStream(clientCSVPath+"/MACD-XAU_USD.csv")
+  .pipe(csv())
+  .on("data", function(contents){
+    console.log(contents)
+
+  })
+  .on("end", function(data){
+    
+  });
+
+  var options = {};
+  options.series = {};
+  options.series['MACD'] = {axis: 'y2'};
+  options.series['Signal'] = {axis: 'y2'};
+  options.series['Histogram'] = {axis: 'y2'};
+  options.axes = {y1: {labelsKMB: true, independentTicks: true}, y2: {labelsKMB: true, independentTicks: true}};
+
+  const g = new Dygraph('graphdiv', clientCSVPath+"/MACD-XAU_USD.csv", options);
+})
+
 
 const remote = window.require('electron').remote;
 var   configv2 = remote.getGlobal('configurationV2').conf;

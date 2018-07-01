@@ -103,7 +103,3 @@ function addTransaction(object)
         });  
     });
 }
-
-var event = new Date('2018-06-21T01:34:03.901179619Z');
-
-console.log(event.toTimeString());
