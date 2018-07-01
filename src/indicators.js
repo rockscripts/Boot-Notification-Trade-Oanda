@@ -25,7 +25,7 @@ var clientCSVPath = __dirname+"/indicators-csv/"+accountId;
 
 var closes = [];
 var times = []
-client.getInstruments("XAU_USD",10,'D',function(error, candles)
+client.getInstruments("XAU_USD",100,'M1',function(error, candles)
   {
     
     Object.keys(candles).forEach(function(key) 

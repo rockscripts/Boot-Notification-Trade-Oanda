@@ -45,6 +45,7 @@ jQuery(document).ready(function(){
   options.series['MACD'] = {axis: 'y2'};
   options.series['Signal'] = {axis: 'y2'};
   options.series['Histogram'] = {axis: 'y2'};
+  options.visibility = [false, true, true, false] ;
   options.axes = {y1: {labelsKMB: true, independentTicks: true}, y2: {labelsKMB: true, independentTicks: true}};
 
   const g = new Dygraph('graphdiv', clientCSVPath+"/MACD-XAU_USD.csv", options);
