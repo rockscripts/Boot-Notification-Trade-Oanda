@@ -42,8 +42,12 @@ CREATE TABLE `globalConfiguration` (
   `alreadyInvested` int(11) NOT NULL DEFAULT '0',
   `enabled` int(5) NOT NULL DEFAULT '0',
   `type` varchar(200) COLLATE utf8_bin NOT NULL,
-  `bull` varchar(200) COLLATE utf8_bin  NULL,
-  `bear` varchar(200) COLLATE utf8_bin  NULL
+  `bull` varchar(200) COLLATE utf8_bin DEFAULT NULL,
+  `bear` varchar(200) COLLATE utf8_bin DEFAULT NULL,
+  `macd` text COLLATE utf8_bin,
+  `strategy` varchar(250) COLLATE utf8_bin NOT NULL DEFAULT 'macd',
+  `candlesCount` int(11) NOT NULL DEFAULT '100',
+  `candlesGranularity` varchar(10) COLLATE utf8_bin NOT NULL DEFAULT 'H1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 
