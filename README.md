@@ -5,7 +5,7 @@ This application buy and sell in differents markets using Oanda platform, i reco
 Use this application in practice mode while you are familiar with.
 </p>
 <h4>How does it works?</h4>
-<p>It provides a user interface for making invests based on your configuration like price ranges, bear and bull probability for buying and selling, take control in profits and losses automatically without spend hours in computer. It runs in background with cronjobs or through this application GUI</p>
+<p>It provides a user interface for making investments based on MACD and RIS indicators, custom configuration like price ranges, bearish and bullish probability for buying and selling, take control in profits and losses automatically without spend hours watching screen. It runs in background with cronjobs or with an friendly user interface.</p>
 <br>
 <p>
 <img src='assets/images/1.png'>
