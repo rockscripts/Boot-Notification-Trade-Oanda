@@ -85,3 +85,8 @@
     {color:green}
     .losses
     {color:red}
+#chart{display: none;}
+.graphTitles
+{
+    display: none;
+}

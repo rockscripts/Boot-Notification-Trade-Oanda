@@ -15,47 +15,18 @@ var DBPool = mysql.createPool(
   waitForConnections:true
 });
 
-var Noty = require('noty');
-var dt = require('datatables.net-responsive')( window, jQuery );
-var Oanda = require('node-oanda');
-var serialize = require('dom-form-serializer').serialize
+var Noty              = require('noty');
+var dt                = require('datatables.net-responsive')( window, jQuery );
+var Oanda             = require('node-oanda');
+var serialize         = require('dom-form-serializer').serialize
 var currencyFormatter = require('currency-formatter');
-var CronJob = require('cron').CronJob;
-
-
-var Dygraph = require('dygraphs');
-
-jQuery(document).ready(function(){
-  var fs = require('fs');
-  var csv = require('fast-csv');
-  var accountId = "101-004-8382586-003";
-  var clientCSVPath = __dirname+"/indicators-csv/"+accountId;
-  fs.createReadStream(clientCSVPath+"/MACD-XAU_USD.csv")
-  .pipe(csv())
-  .on("data", function(contents){
-    console.log(contents)
-
-  })
-  .on("end", function(data){
-    
-  });
-
-  var options = {};
-  options.series = {};
-  options.series['MACD'] = {axis: 'y2'};
-  options.series['Signal'] = {axis: 'y2'};
-  options.series['Histogram'] = {axis: 'y2'};
-  options.visibility = [false, true, true, false] ;
-  options.axes = {y1: {labelsKMB: true, independentTicks: true}, y2: {labelsKMB: true, independentTicks: true}};
-
-  const g = new Dygraph('graphdiv', clientCSVPath+"/MACD-XAU_USD.csv", options);
-})
-
-
-const remote = window.require('electron').remote;
-var   configv2 = remote.getGlobal('configurationV2').conf;
-
-var   api = new Oanda(configv2); 
+var CronJob           = require('cron').CronJob;
+var Dygraph           = require('dygraphs');
+const remote          = window.require('electron').remote;
+var   configv2        = remote.getGlobal('configurationV2').conf;
+var fs                = require('fs');
+var csv               = require('fast-csv');
+var   api             = new Oanda(configv2); 
 /*added to replace trade or edit
   node oanda does not work
 */
@@ -124,9 +95,6 @@ var dataTableTrades = jQuery('#tableTrading');
 jQuery("body").css("display","inline");
 tradingMain.fadeOut();
 
-jQuery(document).on("click",".open-graph",function(){
-  displayGraphicConf(jQuery(this).attr("instrument"));
-})
 
 jQuery(document).on("click",".open-trading",function(e)
 {    
@@ -187,6 +155,13 @@ requestTrades.go();
 });    
 });
 
+
+jQuery(document).on("click",".open-graph",function()
+{
+  var accountID = jQuery("#accountId").val();  
+  var instrument = jQuery(this).attr("instrument"); 
+  displayGraphicConf(instrument,accountID,function(){});
+});
 
 jQuery(document).on("click",".open-transactions",function()
 {   
@@ -890,13 +865,13 @@ function getCandleDateForCanvas(dateTime)
 
  
 }
-function displayGraphicConf(instrument)
+function displayGraphicConf(instrument,accountID,callback)
 {
   /*getGlobalConfById(idConf,function(rowConf)
   {*/
     var instrument = instrument;
     
-      client.getInstruments(instrument,1000,'M1',function(error, candles){
+      client.getInstruments(instrument,100,'H1',function(error, candles){
      
       if(error=='null')
       {}
@@ -907,10 +882,12 @@ function displayGraphicConf(instrument)
         var Bull = 0;
         var Bear = 0;
         var DOJI = 0;
+        var inputData = "Date,Open,Close,High,Low\n";
        Object.keys(candles).forEach(function(key) 
        {
         var candle = candles[key];
         bars.add(new Date(candle.time).getTime(), candle.mid.o, candle.mid.h, candle.mid.l, candle.mid.c, candle.volume);
+        inputData = inputData.concat(candle.time.replace(".000000000Z","")+","+candle.mid.o+","+candle.mid.c+","+candle.mid.h+","+candle.mid.l+"\n")
         var closeCandle = candle.mid.c; 
         var openCandle  = candle.mid.o; 
         
@@ -932,8 +909,8 @@ function displayGraphicConf(instrument)
        var bullPercent = (parseInt(Bull)/bu_beTotal) * 100; 
  
        chart.addSeries(bars);
-       chart.outputTo(document.getElementById('chart'));
-       chart.render();
+       //chart.outputTo(document.getElementById('chart'));
+       //chart.render();
        jQuery("#instrumentChartMain").dialog({
         modal: true,
         resizable: false,
@@ -948,20 +925,133 @@ function displayGraphicConf(instrument)
                                                   });
                           jQuery("#traddingMainContent").fadeOut(function(){
                             jQuery(".trading-bar").fadeOut()
-                            chartCandles.fadeIn();
+                            //chartCandles.fadeIn();
                             jQuery(".bull-value").text(Math.round(bullPercent)+"%");
                             jQuery(".bear-value").text(Math.round(bearPercent)+"%");
+                            displayCandlesGraph(inputData);
+                            displayMACDGraph(instrument,accountID);
+                            getGlobalConfByAccountAndInstrument(accountID, instrument, function(err,globalConf){
+                             var macdValue =  JSON.parse(globalConf.macd);
+                             jQuery(".macd-time").text(macdValue.time.replace("T"," at "));
+                             jQuery(".macd-order").text(macdValue.signalOrder);
+                             
+                             if(macdValue.signalOrder=="Buy")
+                                jQuery(".macd-order").css("color","green");
+                             else
+                                jQuery(".macd-order").css("color","red");
+                            })
+                            $("#macd-graph").appendTo("#macd-graphdialog");
+                            $("#clandestick-graph").appendTo("#clandestick-graphdialog");
+                            jQuery(".graphTitles").fadeIn();
+                            return callback();
                           });
                           
                         },
         close: function()
         {
-          chartCandles.fadeOut();    
+          jQuery(".graphTitles").fadeOut();
+          //chartCandles.fadeOut();    
           jQuery(".trading-bar").fadeIn();
-          jQuery("#traddingMainContent").fadeIn();       
+          jQuery("#traddingMainContent").fadeIn();    
+
         }
      });        
       }
     });
   /*});*/
 }
+function displayMACDGraph(instrument,accountID)
+{
+  var clientCSVPath = __dirname+"/indicators-csv/"+accountID;
+    fs.createReadStream(clientCSVPath+"/MACD-"+instrument+".csv")
+    .pipe(csv())
+    .on("data", function(contents){
+      console.log(contents)
+  
+    })
+    .on("end", function(data){
+      
+    });
+  
+    var options = {};
+    options.series = {};
+    options.series['MACD'] = {axis: 'y2'};
+    options.series['Signal'] = {axis: 'y2'};
+    options.series['Histogram'] = {axis: 'y2'};
+    options.visibility = [false, true, true, false] ;
+    options.axes = {y1: {labelsKMB: true, independentTicks: true}, y2: {labelsKMB: true, independentTicks: true}};
+    console.log(clientCSVPath+"/MACD-"+instrument+".csv")
+    const g = new Dygraph('graphdiv', clientCSVPath+"/MACD-"+instrument+".csv", options);
+}
+
+function displayCandlesGraph(candleData)
+{
+  g2 = new Dygraph(
+    document.getElementById("candle-chart"),
+    candleData,
+    {
+      plotter: candlePlotter
+    });
+}
+function candlePlotter(e) {
+  var BAR_WIDTH = 8;
+  // This is the officially endorsed way to plot all the series at once.
+  if (e.seriesIndex !== 0) return;
+  var setCount = e.seriesCount;
+  if (setCount != 4) {
+    throw "Exactly 4 prices each point must be provided for candle chart (open close high low)";
+  }
+  var prices = [];
+  var price;
+  var sets = e.allSeriesPoints;
+  for (var p = 0 ; p < sets[0].length; p++) {
+    price = {
+      open : sets[0][p].yval,
+      close : sets[1][p].yval,
+      high : sets[2][p].yval,
+      low : sets[3][p].yval,
+      openY : sets[0][p].y,
+      closeY : sets[1][p].y,
+      highY : sets[2][p].y,
+      lowY : sets[3][p].y
+    };
+    prices.push(price);
+  }
+  var area = e.plotArea;
+  var ctx = e.drawingContext;
+  ctx.strokeStyle = '#202020';
+  ctx.lineWidth = 0.6;
+  for (p = 0 ; p < prices.length; p++) {
+    ctx.beginPath();
+    price = prices[p];
+    var topY = area.h * price.highY + area.y;
+    var bottomY = area.h * price.lowY + area.y;
+    var centerX = area.x + sets[0][p].x * area.w;
+    ctx.moveTo(centerX, topY);
+    ctx.lineTo(centerX, bottomY);
+    ctx.closePath();
+    ctx.stroke();
+    var bodyY;
+    if (price.open > price.close) {
+      ctx.fillStyle ='rgba(244,44,44,1.0)';
+      bodyY = area.h * price.openY + area.y;
+    }
+    else {
+      ctx.fillStyle ='rgba(44,244,44,1.0)';
+      bodyY = area.h * price.closeY  + area.y;
+    }
+    var bodyHeight = area.h * Math.abs(price.openY - price.closeY);
+    ctx.fillRect(centerX - BAR_WIDTH / 2, bodyY, BAR_WIDTH,  bodyHeight);
+  }
+}
+function getGlobalConfByAccountAndInstrument(accountId, instrument, callback)
+  {    
+    DBPool.getConnection(function(err, connection) 
+    {
+      connection.query("SELECT * FROM globalConfiguration WHERE accountId='"+accountId+"' AND instrument='"+instrument+"'", function (error, results) 
+      {
+        connection.release(); 
+        return callback(error, results[0])
+      })
+    });
+  } 

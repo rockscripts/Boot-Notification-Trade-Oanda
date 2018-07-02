@@ -7,7 +7,7 @@
   </head>
   <body>
 
-<div id="graphdiv" style="width: 100%;background: white"></div>
+
 
     <div style="margin:8px;">
 
@@ -172,10 +172,26 @@
     <div id="instrumentChartMain">
 
       <p style="text-align: left">
+          <span>&nbsp;&nbsp;&nbsp;<b>MACD: </b><span class="macd-order"></span> on <span class="macd-time"></span></span><br>
         <span>&nbsp;&nbsp;&nbsp;<b>Bear: </b><span class="bear-value"></span></span><br>
         <span>&nbsp;&nbsp;&nbsp;<b>Bull: </b><span class="bull-value"></span></span>
       </p>
-      <canvas id="chart" width="800" height="300"></canvas>
+      <div>
+        <canvas id="chart" width="800" height="300"></canvas>
+        <div id="macd-graphdialog"></div>
+        <div id="clandestick-graphdialog"></div>
+      </div>           
      </div>
+     <div class="nice-graphs">
+        <div id="macd-graph">
+            <h1  class="graphTitles">MACD</h1>
+           <div id="graphdiv" style="width: 100%;background: white"></div>           
+         </div>
+         <div id="clandestick-graph">
+           <br>
+         <h1 class="graphTitles">Clandestick</h1>
+           <div id="candle-chart"  style="width: 100%;background: white"></div>
+         </div>
+     </div>         
   </body>
 </html>

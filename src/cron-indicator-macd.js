@@ -67,7 +67,7 @@ client.getInstruments(instrument,100,'H1',function(error, candles)
             /*Collect best signal values*/
             if(parseFloat(macdV)>parseFloat(macdS))
             {
-                signalOrder = "buy";
+                signalOrder = "Buy";
                 if(nearLastSignalValues.length==0)
                 {
                     nearLastSignalValues.push({signalOrder,time,macdV,macdS});
@@ -86,7 +86,7 @@ client.getInstruments(instrument,100,'H1',function(error, candles)
             }
             if(parseFloat(macdV)<parseFloat(macdS))
             {
-                signalOrder = "sell";
+                signalOrder = "Sell";
                 if(nearLastSignalValues.length==0)
                 {
                     nearLastSignalValues.push({signalOrder,time,macdV,macdS});
