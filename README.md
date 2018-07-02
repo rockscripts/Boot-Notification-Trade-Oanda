@@ -2,7 +2,7 @@
 <p>
 This application buy and sell in differents markets using Oanda platform, i recommend operate with gold, silver and copper. It was tested in a practice account and it is stable.
 <p>
-Use this application in practice mode while you are familiar with.
+<b>Use this application at your risk, i recommend run in practice mode while you are familiar with.</b>
 </p>
 <h4>How does it works?</h4>
 <p>It provides a user interface for making investments based on MACD and RIS indicators, custom configuration like price ranges, bearish and bullish probability for buying and selling, take control in profits and losses automatically without spend hours watching screen. It runs in background with cronjobs or with an friendly user interface.</p>
