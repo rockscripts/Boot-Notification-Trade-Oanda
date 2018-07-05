@@ -140,11 +140,11 @@ requestTrades.success(function(dataTrades)
       if ( ! $.fn.DataTable.isDataTable( '#tableTrading' ) ) {
         dataTableTrades.dataTable({data:dataSet});
       }   
-      else{
+      else
+      {
         dataTableTrades.DataTable().destroy();
         dataTableTrades.dataTable({data:dataSet});
-      }
-       
+      }       
     }
    
     index++;

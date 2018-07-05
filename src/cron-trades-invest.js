@@ -11,6 +11,7 @@ var DBPool = mysql.createPool(
 });
 
 var Noty = require('noty');
+var tulind = require('tulind');
 
 var config = {
   token: 'ef341f419fd90a61daea143902dfbea8-57c5975686db1479da10cc247075a93a',
@@ -32,61 +33,126 @@ var client = new OANDAAdapter({
 });
 //>with account id
 //get trades
-var accountId = '101-004-8382586-002'; //Ana
+var accountId = '101-004-8382586-003'; //Ana
 getAccountGlobalConf(accountId,'BUY',function(accountGlobalConf){
   Object.keys(accountGlobalConf).forEach(function(key) 
       {
-        var accountGlobalConfRow = accountGlobalConf[key]
+        var accountGlobalConfRow = accountGlobalConf[key];
+        
         client.getPrice(accountGlobalConfRow.instrument, accountId, function(error, ratesprices)
       {
+        var strategy = accountGlobalConfRow.strategy;
         //console.log(ratesprices)
         if(error==null)
         {
           var currentPrice = ratesprices.bids[0].price;          
         }
-        console.log(currentPrice);
+       
               // getGlobalConf("BUY",accountGlobalConfRow.instrument,function(globalConf)
              // {
                   /*IS TIME TO AUTO INVEST?*/
                   if(accountGlobalConfRow!=null)
-                  {
-                    if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.minPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.maxPrice))                  
-                    {
-                      console.log('start create trade'+accountGlobalConfRow.enabled);
-                      if(accountGlobalConfRow.enabled == 1)
-                      {
-                        if(accountGlobalConfRow.alreadyInvested == 0)
-                        {   
-                         //buy                                            
-                         createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits, accountGlobalConfRow.id);
-                        }
-                      }
-                    }  
+                  { 
+                    var macd = JSON.parse(accountGlobalConfRow.macd);
+                    var nowTime = new Date();
+                    var signalTime = new Date(macd.time+".000Z");                                  
+                    var nextSignalTime = new Date(macd.time+".000Z");;
+                    nextSignalTime.setHours(nextSignalTime.getHours() + 1); //BASED ON ONE HOUR CANDLE
+                    nextSignalTime.toISOString();
+                     
 
-                    if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.sMinPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.sMaxPrice))                  
-                    {
-                      console.log('start create trade sell '+accountGlobalConfRow.enabled);
-                      if(accountGlobalConfRow.enabled == 1)
+                    if(accountGlobalConfRow.enabled == 1)
                       {
                         if(accountGlobalConfRow.alreadyInvested == 0)
-                        {   
-                         //sell                                            
-                         createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
-                        }
-                      }
-                    }  
-                  }    
-                             
-             // });
+                          { 
+                            //CUSTOM STRATEGY RANGE
+                            if(strategy=="custom range")
+                            {
+                              if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.minPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.maxPrice))                  
+                              {                                                       
+                                //buy                                            
+                                createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits, accountGlobalConfRow.id);
+                              }
+                              if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.sMinPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.sMaxPrice))                  
+                              {                        
+                                //sell                                            
+                                createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
+                              }
+                            }
+
+                            //MACD and RSI STRATEGY
+                            if(strategy=="macd")
+                            {                             
+                              if(nowTime.getTime()>=signalTime.getTime() && nowTime.getTime()<=nextSignalTime.getTime())
+                              { 
+                                if(macd.signalOrder=="Buy")
+                                {   
+                                  get_RSI_CMO_indicators(accountGlobalConfRow.instrument,accountGlobalConfRow.candlesCount,accountGlobalConfRow.candlesGranularity, function(indicators)
+                                  {                                    
+                                    var rsi = indicators[0];
+                                    var mco = indicators[1];
+                                    if(parseFloat(mco.mco)<50 && parseFloat(rsi.rsi)<0)
+                                    {
+                                      //buy                                            
+                                      createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits, accountGlobalConfRow.id); 
+                                    }                                      
+                                  });                                                                                                                                           
+                                } 
+                                if(macd.signalOrder=="Sell")
+                                {  
+                                  get_RSI_CMO_indicators(accountGlobalConfRow.instrument,accountGlobalConfRow.candlesCount,accountGlobalConfRow.candlesGranularity, function(indicators)
+                                  {                                    
+                                    var rsi = indicators[0];
+                                    var mco = indicators[1];
+                                    if(parseFloat(mco.mco)>50 && parseFloat(rsi.rsi)>0)
+                                    {
+                                      //sell                                            
+                                      createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
+                                    }                                      
+                                  });                                                                                                                                      
+                                } 
+                              }                                                                                                           
+                            }
+                          }
+                      }    
+                  }   
       });
-      });
-      DBPool.end(function (err) {
-        // all connections in the pool have ended
-      });
+   });
 });
     
-  
+function get_RSI_CMO_indicators(instrument,count,granularity, callback)
+{
+  var indiators = [];
+  var closes = [];
+  var times = []
+  /*Get Candles*/
+  client.getInstruments(instrument,count,granularity,function(error, candles)
+  {    
 
+  Object.keys(candles).forEach(function(key) 
+  {
+      var candle = candles[key];
+      closes.push(candle.mid.c);
+      times.push(candle.time);
+  });
+
+  tulind.indicators.rsi.indicator([closes],[14], function(err, rsiResult) 
+      {
+        rsiResult = rsiResult[0];
+        rsiResult.reverse();
+        indiators.push({rsi:rsiResult[0]});
+
+        tulind.indicators.cmo.indicator([closes],[9], function(err, cmoResult) 
+        {
+          cmoResult = cmoResult[0];
+          cmoResult.reverse();
+          indiators.push({cmo:cmoResult[0]});
+          return callback(indiators)
+        });
+      });
+ 
+  }); 
+}  
 
 function createTrade(instrument, units, confId)
 {

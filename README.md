@@ -65,3 +65,6 @@ Open your Terminal and paste follow commands
 <div style="font-size:9px!important">Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Switch">Switch</a> from <a href="https://www.flaticon.com/"     title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/"     title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
 <div style="font-size:9px!important">Icons made by <a href="https://www.flaticon.com/authors/stephen-hutchings" title="Stephen Hutchings">Stephen Hutchings</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
 <div style="font-size:9px!important">Icons made by <a href="https://www.flaticon.com/authors/vectors-market" title="Vectors Market">Vectors Market</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
+
+secret ec747fe5d895e1e61a7d6328231734bc7c98bf9d4bea4abe6ea8deca025d3ac7
+key    9NT4E2M1-XSGVCGQS-2WZWC5XU-K1GTEFU6-ZUVR26WG
