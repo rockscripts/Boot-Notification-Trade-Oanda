@@ -123,9 +123,6 @@ client.getOpenTrades(accountId, function(error, trades)
               });
       });
   });
-  DBPool.end(function (err) {
-    // all connections in the pool have ended
-  });
 });
 
 function createTrade(instrument, units, confId)
@@ -189,6 +186,7 @@ function getGlobalConf(type,instrument,callback)
   var accountID = accountId;   
   DBPool.getConnection(function(err, connection) 
   {
+    console.log(err)
     connection.query("SELECT * FROM globalConfiguration WHERE accountId='"+accountID+"' AND type='"+type+"' AND instrument='"+instrument+"'", function (error, results, fields) 
       {        
         connection.release();

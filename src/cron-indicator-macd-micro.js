@@ -42,7 +42,7 @@ client.getAccounts(function(error, accounts)
                     {
                         var instrument = instruments[keyInstruments].instrument;
                         /*Get Candles*/
-                        client.getInstruments(instrument,100,'H1',function(error, candles)
+                        client.getInstruments(instrument,100,'M30',function(error, candles)
                         {    
 
                         Object.keys(candles).forEach(function(key) 
@@ -125,13 +125,13 @@ client.getAccounts(function(error, accounts)
                             var recentSignal = nearLastSignalValues[0];
 
                             mkdirp(__dirname+"/indicators-csv/"+accountId, function(err) { 
-                                var ws = fs.createWriteStream(clientCSVPath+"/MACD-"+instrument+".csv")
+                                var ws = fs.createWriteStream(clientCSVPath+"/MACD-micro-"+instrument+".csv")
                                     if(err==null)
                                     {
                                         csv.write(csvInput, {headers:true}).pipe(ws);  
                                     }
                                 });
-                                setGlobalConfByAccountAndInstrument(accountId, instrument,{macd:JSON.stringify(recentSignal)}, function(){});
+                                setGlobalConfByAccountAndInstrument(accountId, instrument,{macdMicro:JSON.stringify(recentSignal)}, function(){});
                             });
                         });
                     });
@@ -160,7 +160,7 @@ client.getAccounts(function(error, accounts)
           connection.release();
           if(error==null)
           {             
-              return callback(results);       
+            return callback(results);       
           }      
           else
           {          

@@ -15,6 +15,7 @@ var DBPool = mysql.createPool(
   acquireTimeout:90000,
   waitForConnections:true
 });
+
 var client = new OANDAAdapter(
 {
     // 'live', 'practice' or 'sandbox'
@@ -23,9 +24,9 @@ var client = new OANDAAdapter(
     accessToken: 'ef341f419fd90a61daea143902dfbea8-57c5975686db1479da10cc247075a93a',    
 });
 
-
 var closes = [];
-var times = []
+var times = [];
+
 client.getAccounts(function(error, accounts)
     {
         if(error==null)

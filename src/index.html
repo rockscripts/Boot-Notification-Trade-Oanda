@@ -169,13 +169,7 @@
      
     </div>
  
-    <div id="instrumentChartMain">
-
-      <p style="text-align: left">
-          <span>&nbsp;&nbsp;&nbsp;<b>MACD: </b><span class="macd-order"></span> on <span class="macd-time"></span></span><br>
-        <span>&nbsp;&nbsp;&nbsp;<b>Current Bear: </b><span class="bear-value"></span></span><br>
-        <span>&nbsp;&nbsp;&nbsp;<b>Current Bull: </b><span class="bull-value"></span></span>
-      </p>
+    <div id="instrumentChartMain">      
       <div>
         <canvas id="chart" width="800" height="300"></canvas>
         <div id="macd-graphdialog"></div>
@@ -184,12 +178,31 @@
      </div>
      <div class="nice-graphs">
         <div id="macd-graph">
-            <h1  class="graphTitles">MACD</h1>
-           <div id="graphdiv" style="width: 100%;background: white"></div>           
+            <h1  class="graphTitles">MACD Macro (H4)</h1>
+            <p style="text-align: left" class="signalInfo">
+                <span>&nbsp;&nbsp;&nbsp;<b>MACD Macro: </b><span class="macd-macro-order"></span> on <span class="macd-macro-time"></span></span><br>              
+            </p>
+            <div id="graphMacroDiv" style="width: 100%;background: white"></div>    
+            <br><br>
+            <h1  class="graphTitles">MACD (H1)</h1>
+            <p style="text-align: left" class="signalInfo">
+                <span>&nbsp;&nbsp;&nbsp;<b>MACD: </b><span class="macd-order"></span> on <span class="macd-time"></span></span><br>              
+            </p>
+            <div id="graphdiv" style="width: 100%;background: white"></div>    
+           <br><br>
+            <h1  class="graphTitles">MACD Micro (M30)</h1>
+            <p style="text-align: left" class="signalInfo">
+                <span>&nbsp;&nbsp;&nbsp;<b>MACD Micro: </b><span class="macd-micro-order"></span> on <span class="macd-micro-time"></span></span><br>              
+            </p>
+            <div id="graphMicroDiv" style="width: 100%;background: white"></div>      
          </div>
          <div id="clandestick-graph">
            <br>
          <h1 class="graphTitles">Candlestick</h1>
+         <p style="text-align: left" class="signalInfo">        
+            <span>&nbsp;&nbsp;&nbsp;<b>Current Bearish: </b><span class="bear-value"></span></span><br>
+            <span>&nbsp;&nbsp;&nbsp;<b>Current Bullish: </b><span class="bull-value"></span></span>
+          </p>
            <div id="candle-chart"  style="width: 100%;background: white"></div>
          </div>
      </div>         

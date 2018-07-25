@@ -19,7 +19,8 @@ var config = {
   dateFormat: 'unix',
   version:"v20"
 };
-
+var fs                = require('fs');
+var csv               = require('fast-csv');
 /*added to replace trade or edit
   node oanda does not work
 */
@@ -57,9 +58,9 @@ getAccountGlobalConf(accountId,'BUY',function(accountGlobalConf){
                     var nowTime = new Date();
                     var signalTime = new Date(macd.time+".000Z");                                  
                     var nextSignalTime = new Date(macd.time+".000Z");;
-                    nextSignalTime.setHours(nextSignalTime.getHours() + 1); //BASED ON ONE HOUR CANDLE
+                    nextSignalTime.setHours(nextSignalTime.getHours() + 4); //BASED ON ONE HOUR CANDLE
                     nextSignalTime.toISOString();
-                     
+                    var clientCSVPath = __dirname+"/indicators-csv/"+accountId; 
 
                     if(accountGlobalConfRow.enabled == 1)
                       {
@@ -82,12 +83,30 @@ getAccountGlobalConf(accountId,'BUY',function(accountGlobalConf){
 
                             //MACD and RSI STRATEGY
                             if(strategy=="macd")
-                            {                             
-                              if(nowTime.getTime()>=signalTime.getTime() && nowTime.getTime()<=nextSignalTime.getTime())
+                            {  fs.createReadStream(clientCSVPath+"/MACD-"+accountGlobalConfRow.instrument+".csv")
+                            .pipe(csv())
+                            .on("data", function(rows){
+                              console.log(rows);   
+                              Object.keys(rows).forEach(function(key) 
+                              {
+                                var row = rows[key];
+                                if(key>0)
+                                {
+                                  var timePeriod = row;
+                                  if(timePeriod == signalTime)
+                                  {
+                                    
+                                  }
+                                }
+                                
+                              });})
+                                                            
+                              var breakDebug = false;
+                              if(nowTime.getTime()>=signalTime.getTime() && nowTime.getTime()<=nextSignalTime.getTime() && breakDebug==true)
                               { 
                                 if(macd.signalOrder=="Buy")
                                 {   
-                                  get_RSI_CMO_indicators(accountGlobalConfRow.instrument,accountGlobalConfRow.candlesCount,accountGlobalConfRow.candlesGranularity, function(indicators)
+                                  get_RSI_CMO_Stoch_indicators(accountGlobalConfRow.instrument,accountGlobalConfRow.candlesCount,accountGlobalConfRow.candlesGranularity, function(indicators)
                                   {                                    
                                     var rsi = indicators[0];
                                     var mco = indicators[1];
@@ -100,15 +119,70 @@ getAccountGlobalConf(accountId,'BUY',function(accountGlobalConf){
                                 } 
                                 if(macd.signalOrder=="Sell")
                                 {  
-                                  get_RSI_CMO_indicators(accountGlobalConfRow.instrument,accountGlobalConfRow.candlesCount,accountGlobalConfRow.candlesGranularity, function(indicators)
+                                  get_RSI_CMO_Stoch_indicators(accountGlobalConfRow.instrument,accountGlobalConfRow.candlesCount,accountGlobalConfRow.candlesGranularity, function(indicators)
                                   {                                    
                                     var rsi = indicators[0];
                                     var mco = indicators[1];
-                                    if(parseFloat(mco.mco)>50 && parseFloat(rsi.rsi)>0)
+                                    var stock = indicators[2];
+                                    var signalMacdTime = macd.time;
+                                    
+                                    fs.createReadStream(clientCSVPath+"/MACD-"+accountGlobalConfRow.instrument+".csv")
+                                      .pipe(csv())
+                                      .on("data", function(rows)
+                                      {
+                                        var startedMACDPeriod = false;  
+                                        var periodsBearing = 0;
+                                        Object.keys(rows).forEach(function(key) 
+                                        {
+                                          var row = rows[key];
+                                          if(key>0)
+                                          {
+                                            
+                                            var currentMacdTime = row[0];
+                                            if(currentMacdTime == signalMacdTime)
+                                            {
+                                              var startedMACDPeriod = true;
+                                            }
+                                            if(startedMACDPeriod == true)
+                                            {
+                                              //Check bearing secuencies, if last macd value is less than penultimate pass filter 
+                                              var currentMACD = row[2];
+                                              var previousMACDRow = rows[key-1]; 
+                                              var previousMACD = previousMACDRow[2];
+                                              if(parseFloat(currentMACD) < parseFloat(previousMACD))
+                                              {
+                                                periodsBearing++;
+                                              }
+                                            }
+                                          }                                          
+                                        });
+
+                                        if(periodsBearing>0)
+                                        {
+                                          if(rsi>50)
+                                          {
+                                            
+                                          }
+                                        }
+                                      })
+                                      .on("end", function(data){
+                                        
+                                      });
+                                    var K = stock.K;
+                                    var D = stock.D;
+                                    if(parseFloat(rsi.rsi)>50 && parseFloat(mco.mco)>0)
                                     {
-                                      //sell                                            
+                                      //sell 
+
+                                      //update stop loss for more euros    
+                                      //create trade                                      
                                       createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
-                                    }                                      
+                                    } 
+                                    else{
+                                      //update stop los for cents
+                                      createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
+                                    }  
+                                                                       
                                   });                                                                                                                                      
                                 } 
                               }                                                                                                           
@@ -120,10 +194,12 @@ getAccountGlobalConf(accountId,'BUY',function(accountGlobalConf){
    });
 });
     
-function get_RSI_CMO_indicators(instrument,count,granularity, callback)
+function get_RSI_CMO_Stoch_indicators(instrument,count,granularity, callback)
 {
-  var indiators = [];
+  var indicators = [];
   var closes = [];
+  var highers = [];
+  var lowers = [];
   var times = []
   /*Get Candles*/
   client.getInstruments(instrument,count,granularity,function(error, candles)
@@ -132,24 +208,37 @@ function get_RSI_CMO_indicators(instrument,count,granularity, callback)
   Object.keys(candles).forEach(function(key) 
   {
       var candle = candles[key];
+      console.log(candle);
       closes.push(candle.mid.c);
+      lowers.push(candle.mid.l);
+      highers.push(candle.mid.h);
       times.push(candle.time);
   });
 
   tulind.indicators.rsi.indicator([closes],[14], function(err, rsiResult) 
-      {
-        rsiResult = rsiResult[0];
-        rsiResult.reverse();
-        indiators.push({rsi:rsiResult[0]});
+    {
+      rsiResult = rsiResult[0];
+      rsiResult.reverse();
+      indicators.push({rsi:rsiResult[0]
+    });
 
-        tulind.indicators.cmo.indicator([closes],[9], function(err, cmoResult) 
-        {
-          cmoResult = cmoResult[0];
-          cmoResult.reverse();
-          indiators.push({cmo:cmoResult[0]});
-          return callback(indiators)
-        });
-      });
+  tulind.indicators.cmo.indicator([closes],[9], function(err, cmoResult) 
+    {
+      cmoResult = cmoResult[0];
+      cmoResult.reverse();
+      indicators.push({cmo:cmoResult[0]});
+      
+    });
+  
+  tulind.indicators.stoch.indicator([highers, lowers, closes], [14, 1, 3], function(err, stockResult) 
+    {
+      var stock = {K:stockResult[0],D:stockResult[0]};
+      indicators.push({stock:stock});
+      return callback(indicators);
+    });
+
+  });
+
  
   }); 
 }  
