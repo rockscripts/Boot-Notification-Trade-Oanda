@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jul 25, 2018 at 08:54 PM
+-- Generation Time: Jul 27, 2018 at 07:09 PM
 -- Server version: 10.1.13-MariaDB
 -- PHP Version: 5.6.20
 
@@ -44,6 +44,7 @@ CREATE TABLE `globalConfiguration` (
   `bear` varchar(200) COLLATE utf8_bin DEFAULT NULL,
   `macd` text COLLATE utf8_bin,
   `macdMacro` text COLLATE utf8_bin,
+  `macdSmall` text COLLATE utf8_bin,
   `macdMicro` text COLLATE utf8_bin,
   `macdStatus` varchar(200) COLLATE utf8_bin NOT NULL DEFAULT 'unotified',
   `strategy` varchar(250) COLLATE utf8_bin NOT NULL DEFAULT 'macd',
@@ -89,7 +90,7 @@ ALTER TABLE `transactionPL`
 -- AUTO_INCREMENT for table `globalConfiguration`
 --
 ALTER TABLE `globalConfiguration`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
