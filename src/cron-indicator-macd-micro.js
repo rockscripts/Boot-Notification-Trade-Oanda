@@ -31,6 +31,9 @@ client.getAccounts(function(error, accounts)
     {
         if(error==null)
         {
+            if(accounts.length>0)
+            {
+             var index = 0;
             Object.keys(accounts).forEach(function(key) 
             {
               var account = accounts[key];
@@ -40,9 +43,10 @@ client.getAccounts(function(error, accounts)
               {
                 Object.keys(instruments).forEach(function(keyInstruments) 
                     {
+                        
                         var instrument = instruments[keyInstruments].instrument;
                         /*Get Candles*/
-                        client.getInstruments(instrument,100,'M30',function(error, candles)
+                        client.getInstruments(instrument,100,'M15',function(error, candles)
                         {    
 
                         Object.keys(candles).forEach(function(key) 
@@ -136,8 +140,27 @@ client.getAccounts(function(error, accounts)
                         });
                     });
               });
+
+              if(index == accounts.length-1)
+                {
+                    setTimeout(function() {
+                        process.exit();
+                    }, 6000);
+                }
+                else{index++;}
+              
             });
+          }
+          else
+            {
+                process.exit();
+            }
         }
+        else
+        {
+            process.exit();
+        }
+       
     });
 
   function setGlobalConfByAccountAndInstrument(accountId, instrument,updateData, callback)
@@ -153,8 +176,9 @@ client.getAccounts(function(error, accounts)
   } 
   function getGlobalConfInstrumentsByAccount(accountId, callback)
   {  
+      
     DBPool.getConnection(function(err, connection) 
-    {    
+    { 
       connection.query("SELECT DISTINCT instrument FROM globalConfiguration WHERE accountId='"+accountId+"'", function (error, results, fields) 
         {
           connection.release();

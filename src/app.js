@@ -158,9 +158,9 @@ requestTrades.go();
 
 jQuery(document).on("click",".open-graph",function()
 {
-  var accountID = jQuery("#accountId").val();  
-  var instrument = jQuery(this).attr("instrument"); 
-  displayGraphicConf(instrument,accountID,function(){});
+  var accountID = jQuery("#accountId").val();   
+  var instrument = jQuery(this).attr("instrument");   
+  displayGraphicConf(instrument,accountID,function(){});  
 });
 
 jQuery(document).on("click",".open-transactions",function()
@@ -429,8 +429,7 @@ function updateLiveData()
   {
     Object.keys(ratesprices).forEach(function(key) 
       {
-        var rateLine = ratesprices[key];
-       
+        var rateLine = ratesprices[key];       
         {
           jQuery(".current-price-"+rateLine.instrument).html(rateLine.bids[0].price);//update current price
           jQuery(".current-price-"+rateLine.instrument).each(function( index ) 
@@ -456,10 +455,10 @@ function updateLiveData()
            getGlobalConf("BUY",rateLine.instrument,function(globalConf)
            {
              //Take profit based on instrument configuration
-              if(globalConf!=null)
+            /*  if(globalConf!=null)
               {
                 /*BEGIN TAKE PROFIT*/
-                if(rateLine.instrument=="XAU_USD")
+              /*  if(rateLine.instrument=="XAU_USD")
                 var takeProfitPrice = sumeFloat(currentPrice,0.010);
                 else
                 var takeProfitPrice = sumeFloat(currentPrice,0.00008);
@@ -481,7 +480,7 @@ function updateLiveData()
                 /*END TAKE PROFIT*/
                 //Stop loss based on instrument configuration     
                  /*BEGIN STOP LOSS*/
-                if(rateLine.instrument=="XAU_USD")
+               /* if(rateLine.instrument=="XAU_USD")
                 var stopLossPrice = restFloat(currentPrice,0.010);
                 else
                 var stopLossPrice = restFloat(currentPrice,0.00008);
@@ -497,9 +496,9 @@ function updateLiveData()
                   }                            
                 }
               } 
-              
+              */
                /*IS TIME TO AUTO INVEST?*/
-               if(globalConf!=null)
+              /* if(globalConf!=null)
                {
                  if(parseFloat(currentPrice) > parseFloat(globalConf.minPrice) && parseFloat(currentPrice) < parseFloat(globalConf.maxPrice))                  
                  {
@@ -524,7 +523,7 @@ function updateLiveData()
                      }
                    }
                  }  
-               }    
+               }  */  
            });                     
             
           });
@@ -916,61 +915,79 @@ function displayGraphicConf(instrument,accountID,callback)
         resizable: false,
         title: ' Graph for '+instrument,
         open: function(){
-                          jQuery('.ui-dialog').css({
-                                                    'width': $(window).width(),
-                                                    'height': $(window).height(),
-                                                    'left': '0px',
-                                                    'top':'0px',
-                                                    'position':'absolute'
-                                                  });
-                          jQuery("#traddingMainContent").fadeOut(function(){
-                            jQuery(".trading-bar").fadeOut()
-                            //chartCandles.fadeIn();
-                            jQuery(".bull-value").text(Math.round(bullPercent)+"%");
-                            jQuery(".bear-value").text(Math.round(bearPercent)+"%");
-                            displayCandlesGraph(inputData);
-                            displayMACDGraph(instrument,accountID);
-                            displayMACDMacroGraph(instrument,accountID);
-                            displayMACDMicroGraph(instrument,accountID);
-                            getGlobalConfByAccountAndInstrument(accountID, instrument, function(err,globalConf){
-                            /*display macd values*/  
-                            var macdValue =  JSON.parse(globalConf.macd);
-                             jQuery(".macd-time").text(macdValue.time.replace("T"," at "));
-                             jQuery(".macd-order").text(macdValue.signalOrder);
+
+                          
+                                jQuery('.ui-dialog').css({
+                                  'width': $(window).width(),
+                                  'height': "auto",
+                                  'left': '0px',
+                                  'top':'0px',
+                                  'position':'absolute'
+                                });
+                                  jQuery("#traddingMainContent").fadeOut(function(){
+                                  jQuery(".trading-bar").fadeOut()
+                                  //chartCandles.fadeIn();
+                                  jQuery(".bull-value").text(Math.round(bullPercent)+"%");
+                                  jQuery(".bear-value").text(Math.round(bearPercent)+"%");
+                                //  setTimeout(function() 
+                                 // {
+                                  displayCandlesGraph(inputData);
+                                  displayMACDGraph(instrument,accountID);
+                                  displayMACDMacroGraph(instrument,accountID);
+                                  displayMACDSmallGraph(instrument,accountID);
+                                  displayMACDMicroGraph(instrument,accountID);
+                                  
+                                  getGlobalConfByAccountAndInstrument(accountID, instrument, function(err,globalConf){
+                                  /*display macd values*/  
+                                  var macdValue =  JSON.parse(globalConf.macd);
+                                  jQuery(".macd-time").text(macdValue.time.replace("T"," at "));
+                                  jQuery(".macd-order").text(macdValue.signalOrder);
+                                  
+                                  if(macdValue.signalOrder=="Buy")
+                                      jQuery(".macd-order").css("color","green");
+                                  else
+                                      jQuery(".macd-order").css("color","red");
+
+                                  /*display macd macro values*/  
+                                  var macdValue =  JSON.parse(globalConf.macdMacro);
+                                  jQuery(".macd-macro-time").text(macdValue.time.replace("T"," at "));
+                                  jQuery(".macd-macro-order").text(macdValue.signalOrder);
+                                  
+                                  if(macdValue.signalOrder=="Buy")
+                                      jQuery(".macd-macro-order").css("color","green");
+                                  else
+                                      jQuery(".macd-macro-order").css("color","red");
+
+                                       /*display macd small values*/  
+                                  var macdValue =  JSON.parse(globalConf.macdSmall);
+                                  jQuery(".macd-small-time").text(macdValue.time.replace("T"," at "));
+                                  jQuery(".macd-small-order").text(macdValue.signalOrder);
+                                  
+                                  if(macdValue.signalOrder=="Buy")
+                                      jQuery(".macd-small-order").css("color","green");
+                                  else
+                                      jQuery(".macd-small-order").css("color","red");
+
+                                  /*display macd micro values*/  
+                                  var macdValue =  JSON.parse(globalConf.macdMicro);
+                                  jQuery(".macd-micro-time").text(macdValue.time.replace("T"," at "));
+                                  jQuery(".macd-micro-order").text(macdValue.signalOrder);
+                                  
+                                  if(macdValue.signalOrder=="Buy")
+                                      jQuery(".macd-micro-order").css("color","green");
+                                  else
+                                      jQuery(".macd-micro-order").css("color","red");
+
+                                  });
+                                //}, 3000);
+                                  $("#macd-graph").appendTo("#macd-graphdialog");
+                                  $("#clandestick-graph").appendTo("#clandestick-graphdialog");
+                                  jQuery(".graphTitles").fadeIn();
+                                  jQuery(".signalInfo").fadeIn();
+                                  return callback();
+                                }); 
                              
-                             if(macdValue.signalOrder=="Buy")
-                                jQuery(".macd-order").css("color","green");
-                             else
-                                jQuery(".macd-order").css("color","red");
-
-                            /*display macd macro values*/  
-                            var macdValue =  JSON.parse(globalConf.macdMacro);
-                             jQuery(".macd-macro-time").text(macdValue.time.replace("T"," at "));
-                             jQuery(".macd-macro-order").text(macdValue.signalOrder);
-                             
-                             if(macdValue.signalOrder=="Buy")
-                                jQuery(".macd-macro-order").css("color","green");
-                             else
-                                jQuery(".macd-macro-order").css("color","red");
-
-                            /*display macd micro values*/  
-                            var macdValue =  JSON.parse(globalConf.macdMicro);
-                             jQuery(".macd-micro-time").text(macdValue.time.replace("T"," at "));
-                             jQuery(".macd-micro-order").text(macdValue.signalOrder);
-                             
-                             if(macdValue.signalOrder=="Buy")
-                                jQuery(".macd-micro-order").css("color","green");
-                             else
-                                jQuery(".macd-micro-order").css("color","red");
-
-                            });
-
-                            $("#macd-graph").appendTo("#macd-graphdialog");
-                            $("#clandestick-graph").appendTo("#clandestick-graphdialog");
-                            jQuery(".graphTitles").fadeIn();
-                            jQuery(".signalInfo").fadeIn();
-                            return callback();
-                          });
+                          
                           
                         },
         close: function()
@@ -980,7 +997,6 @@ function displayGraphicConf(instrument,accountID,callback)
           //chartCandles.fadeOut();    
           jQuery(".trading-bar").fadeIn();
           jQuery("#traddingMainContent").fadeIn();    
-
         }
      });        
       }
@@ -991,49 +1007,39 @@ function displayGraphicConf(instrument,accountID,callback)
 function displayMACDMacroGraph(instrument,accountID)
 {
     var clientCSVPath = __dirname+"/indicators-csv/"+accountID;
-    fs.createReadStream(clientCSVPath+"/MACD-macro-"+instrument+".csv")
-    .pipe(csv())
-    .on("data", function(contents){
-      console.log(contents)
-  
-    })
-    .on("end", function(data){
-      
-    });
-  
     var options = {};
     options.series = {};
     options.series['MACD'] = {axis: 'y2'};
     options.series['Signal'] = {axis: 'y2'};
     options.series['Histogram'] = {axis: 'y2'};
-    options.series['MACD1'] = {axis: 'y2'};
-    options.series['Signal1'] = {axis: 'y2'};
     options.visibility = [false, true, true, false, true] ;
     options.axes = {y1: {labelsKMB: true, independentTicks: true}, y2: {labelsKMB: true, independentTicks: true}};
     console.log(clientCSVPath+"/MACD-macro-"+instrument+".csv")
     const g = new Dygraph('graphMacroDiv', clientCSVPath+"/MACD-macro-"+instrument+".csv", options);
 }
 
-function displayMACDMicroGraph(instrument,accountID)
+function displayMACDSmallGraph(instrument,accountID)
 {
     var clientCSVPath = __dirname+"/indicators-csv/"+accountID;
-    fs.createReadStream(clientCSVPath+"/MACD-micro-"+instrument+".csv")
-    .pipe(csv())
-    .on("data", function(contents){
-      console.log(contents)
-  
-    })
-    .on("end", function(data){
-      
-    });
-  
     var options = {};
     options.series = {};
     options.series['MACD'] = {axis: 'y2'};
     options.series['Signal'] = {axis: 'y2'};
     options.series['Histogram'] = {axis: 'y2'};
-    options.series['MACD1'] = {axis: 'y2'};
-    options.series['Signal1'] = {axis: 'y2'};
+    options.visibility = [false, true, true, false, true] ;
+    options.axes = {y1: {labelsKMB: true, independentTicks: true}, y2: {labelsKMB: true, independentTicks: true}};
+    console.log(clientCSVPath+"/MACD-small-"+instrument+".csv")
+    const g = new Dygraph('graphSmallDiv', clientCSVPath+"/MACD-small-"+instrument+".csv", options);
+}
+
+function displayMACDMicroGraph(instrument,accountID)
+{
+    var clientCSVPath = __dirname+"/indicators-csv/"+accountID;
+    var options = {};
+    options.series = {};
+    options.series['MACD'] = {axis: 'y2'};
+    options.series['Signal'] = {axis: 'y2'};
+    options.series['Histogram'] = {axis: 'y2'};
     options.visibility = [false, true, true, false, true] ;
     options.axes = {y1: {labelsKMB: true, independentTicks: true}, y2: {labelsKMB: true, independentTicks: true}};
     console.log(clientCSVPath+"/MACD-micro-"+instrument+".csv")
@@ -1043,23 +1049,11 @@ function displayMACDMicroGraph(instrument,accountID)
 function displayMACDGraph(instrument,accountID)
 {
     var clientCSVPath = __dirname+"/indicators-csv/"+accountID;
-    fs.createReadStream(clientCSVPath+"/MACD-"+instrument+".csv")
-    .pipe(csv())
-    .on("data", function(contents){
-      console.log(contents)
-  
-    })
-    .on("end", function(data){
-      
-    });
-  
     var options = {};
     options.series = {};
     options.series['MACD'] = {axis: 'y2'};
     options.series['Signal'] = {axis: 'y2'};
     options.series['Histogram'] = {axis: 'y2'};
-    options.series['MACD1'] = {axis: 'y2'};
-    options.series['Signal1'] = {axis: 'y2'};
     options.visibility = [false, true, true, false, true] ;
     options.axes = {y1: {labelsKMB: true, independentTicks: true}, y2: {labelsKMB: true, independentTicks: true}};
     console.log(clientCSVPath+"/MACD-"+instrument+".csv")

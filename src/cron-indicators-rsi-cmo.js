@@ -64,6 +64,7 @@ client.getAccounts(function(error, accounts)
               });
             });
         }
+        process.exit();
     });
 
   function getGlobalConfInstrumentsByAccount(accountId, callback)

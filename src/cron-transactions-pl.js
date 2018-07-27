@@ -37,6 +37,9 @@ function importAccountsPLTransactions()
     {
         if(error==null)
         {
+            if(accounts.length>0)
+            {
+            var index = 0;
             Object.keys(accounts).forEach(function(key) 
             {
               var account = accounts[key];
@@ -77,7 +80,24 @@ function importAccountsPLTransactions()
                 }  
             });
             });
-        }                
+            
+            if(index == (accounts.length-1))
+            {
+                setTimeout(function() {
+                    process.exit();
+                }, 6000);
+            }
+          index++;
+        }
+        else
+        {
+            process.exit();
+        }
+      }    
+      else
+        {
+            process.exit();
+        }            
     });    
 }
 function RFCDateTime(date)

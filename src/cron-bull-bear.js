@@ -23,25 +23,39 @@ var client = new OANDAAdapter(
  get bear and bull percent for getting an indicator 
 */
 
-
 getGlobalConfInstruments(function(configurations){
   if(configurations=='null')
-      {}
+      {process.exit()}
       else
       {
-        Object.keys(configurations).forEach(function(key) 
-       {
-          var configuration = configurations[key];
-          bearBullCalculator(configuration.instrument,function(objectData){
-          setGlobalConfByInstrument(configuration.instrument,objectData, function(){});
-         });    
-       });
+        if(configurations.length > 0)
+        {
+          var index = 0;
+          Object.keys(configurations).forEach(function(key) 
+         {
+            var configuration = configurations[key];
+            bearBullCalculator(configuration.instrument,function(objectData){
+            setGlobalConfByInstrument(configuration.instrument,objectData, function(){});
+           }); 
+           if(index == configurations.length-1)
+                  {
+                      setTimeout(function() {
+                          process.exit();
+                      }, 6000);
+                  }
+                  else{index++;}   
+         });
+        }
+        else
+        {
+          process.exit();
+        }        
       }  
-
 });
+
 function bearBullCalculator(instrument,callback)
 {
-  client.getInstruments(instrument,1000,'M1',function(error, candles)
+  client.getInstruments(instrument,1000,'H1',function(error, candles)
   {
     var Bull = 0;
     var Bear = 0;
@@ -91,6 +105,7 @@ function getGlobalConfInstruments(callback)
       });
   });
 }
+
 function setGlobalConfByInstrument(instrument,updateData, callback)
 {    
   DBPool.getConnection(function(err, connection) 

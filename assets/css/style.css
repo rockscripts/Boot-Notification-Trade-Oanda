@@ -76,6 +76,7 @@
         display: none;
         text-align: center;
     padding-top: 20px;
+    border: none;
     }
     .transactions-container
     {
@@ -89,6 +90,9 @@
 .graphTitles
 {
     display: none;
+    text-align: left;
 }
 .signalInfo
 {display: none;}
+.grid-item{float: left;width: 44%;margin-left: 5%}
+.grid-row{clear: both;}

@@ -39,14 +39,14 @@ client.getAccounts(function(error, accounts)
               var account = accounts[key];
               var accountId = account.id;
               var clientCSVPath = __dirname+"/indicators-csv/"+accountId;
-              
               getGlobalConfInstrumentsByAccount(accountId, function(instruments)
-              {                                      
-                    Object.keys(instruments).forEach(function(keyInstruments) 
+              {
+                Object.keys(instruments).forEach(function(keyInstruments) 
                     {
+                        
                         var instrument = instruments[keyInstruments].instrument;
                         /*Get Candles*/
-                        client.getInstruments(instrument,100,'H1',function(error, candles)
+                        client.getInstruments(instrument,100,'M30',function(error, candles)
                         {    
 
                         Object.keys(candles).forEach(function(key) 
@@ -129,38 +129,38 @@ client.getAccounts(function(error, accounts)
                             var recentSignal = nearLastSignalValues[0];
 
                             mkdirp(__dirname+"/indicators-csv/"+accountId, function(err) { 
-                                var ws = fs.createWriteStream(clientCSVPath+"/MACD-"+instrument+".csv")
+                                var ws = fs.createWriteStream(clientCSVPath+"/MACD-small-"+instrument+".csv")
                                     if(err==null)
                                     {
                                         csv.write(csvInput, {headers:true}).pipe(ws);  
                                     }
                                 });
-                                setGlobalConfByAccountAndInstrument(accountId, instrument,{macd:JSON.stringify(recentSignal)}, function(){});
+                                setGlobalConfByAccountAndInstrument(accountId, instrument,{macdSmall:JSON.stringify(recentSignal)}, function(){});
                             });
-                        });                        
+                        });
                     });
-                
-                
               });
-              if(index == (accounts.length-1))
+
+              if(index == accounts.length-1)
                 {
                     setTimeout(function() {
                         process.exit();
                     }, 6000);
                 }
-              index++;
+                else{index++;}
+              
             });
+          }
+          else
+            {
+                process.exit();
+            }
         }
         else
         {
             process.exit();
         }
-    }
-    else
-    {
-        process.exit();
-    }
-        
+       
     });
 
   function setGlobalConfByAccountAndInstrument(accountId, instrument,updateData, callback)
@@ -176,14 +176,15 @@ client.getAccounts(function(error, accounts)
   } 
   function getGlobalConfInstrumentsByAccount(accountId, callback)
   {  
+      
     DBPool.getConnection(function(err, connection) 
-    {    
+    { 
       connection.query("SELECT DISTINCT instrument FROM globalConfiguration WHERE accountId='"+accountId+"'", function (error, results, fields) 
         {
           connection.release();
           if(error==null)
           {             
-              return callback(results);       
+            return callback(results);       
           }      
           else
           {          
@@ -209,4 +210,3 @@ server.send({
    subject: subject
 }, function(err, message) { console.log(err || message); });
 }
-

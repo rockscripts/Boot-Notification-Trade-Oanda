@@ -34,164 +34,272 @@ var client = new OANDAAdapter({
 });
 //>with account id
 //get trades
-var accountId = '101-004-8382586-003'; //Ana
-getAccountGlobalConf(accountId,'BUY',function(accountGlobalConf){
-  Object.keys(accountGlobalConf).forEach(function(key) 
-      {
-        var accountGlobalConfRow = accountGlobalConf[key];
-        
-        client.getPrice(accountGlobalConfRow.instrument, accountId, function(error, ratesprices)
-      {
-        var strategy = accountGlobalConfRow.strategy;
-        //console.log(ratesprices)
-        if(error==null)
-        {
-          var currentPrice = ratesprices.bids[0].price;          
-        }
-       
-              // getGlobalConf("BUY",accountGlobalConfRow.instrument,function(globalConf)
-             // {
-                  /*IS TIME TO AUTO INVEST?*/
-                  if(accountGlobalConfRow!=null)
-                  { 
-                    var macd = JSON.parse(accountGlobalConfRow.macd);
-                    var nowTime = new Date();
-                    var signalTime = new Date(macd.time+".000Z");                                  
-                    var nextSignalTime = new Date(macd.time+".000Z");;
-                    nextSignalTime.setHours(nextSignalTime.getHours() + 4); //BASED ON ONE HOUR CANDLE
-                    nextSignalTime.toISOString();
-                    var clientCSVPath = __dirname+"/indicators-csv/"+accountId; 
+client.getAccounts(function(error, accounts)
+{
+if(error==null)
+ {
+  if(accounts.length>0)
+  {
+   var index = 0;
+  Object.keys(accounts).forEach(function(key) 
+  {
+    var account = accounts[key];
+    var accountId = account.id;
 
-                    if(accountGlobalConfRow.enabled == 1)
-                      {
-                        if(accountGlobalConfRow.alreadyInvested == 0)
-                          { 
-                            //CUSTOM STRATEGY RANGE
-                            if(strategy=="custom range")
+      getAccountGlobalConf(accountId,'BUY',function(accountGlobalConf){
+        Object.keys(accountGlobalConf).forEach(function(key) 
+            {
+              var accountGlobalConfRow = accountGlobalConf[key];
+              
+              client.getPrice(accountGlobalConfRow.instrument, accountId, function(error, ratesprices)
+            {
+              var strategy = accountGlobalConfRow.strategy;
+              //console.log(ratesprices)
+              if(error==null)
+              {
+                var currentPrice = ratesprices.bids[0].price;          
+              }
+            
+                    // getGlobalConf("BUY",accountGlobalConfRow.instrument,function(globalConf)
+                  // {
+                        /*IS TIME TO AUTO INVEST?*/
+                        if(accountGlobalConfRow!=null)
+                        { 
+                          var macd = JSON.parse(accountGlobalConfRow.macd);
+                          var nowTime = new Date();
+                          var signalTime = new Date(macd.time+".000Z");                                  
+                          var nextSignalTime = new Date(macd.time+".000Z");;
+                          nextSignalTime.setHours(nextSignalTime.getHours() + 4); //BASED ON ONE HOUR CANDLE
+                          nextSignalTime.toISOString();
+                          var clientCSVPath = __dirname+"/indicators-csv/"+accountId; 
+
+                          if(accountGlobalConfRow.enabled == 1)
                             {
-                              if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.minPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.maxPrice))                  
-                              {                                                       
-                                //buy                                            
-                                createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits, accountGlobalConfRow.id);
-                              }
-                              if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.sMinPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.sMaxPrice))                  
-                              {                        
-                                //sell                                            
-                                createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
-                              }
-                            }
-
-                            //MACD and RSI STRATEGY
-                            if(strategy=="macd")
-                            {  fs.createReadStream(clientCSVPath+"/MACD-"+accountGlobalConfRow.instrument+".csv")
-                            .pipe(csv())
-                            .on("data", function(rows){
-                              console.log(rows);   
-                              Object.keys(rows).forEach(function(key) 
-                              {
-                                var row = rows[key];
-                                if(key>0)
-                                {
-                                  var timePeriod = row;
-                                  if(timePeriod == signalTime)
+                              if(accountGlobalConfRow.alreadyInvested == 0)
+                                { 
+                                  //CUSTOM STRATEGY RANGE
+                                  if(strategy=="custom range")
                                   {
-                                    
+                                    if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.minPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.maxPrice))                  
+                                    {                                                       
+                                      //buy                                            
+                                      createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits, accountGlobalConfRow.id);
+                                    }
+                                    if(parseFloat(currentPrice) > parseFloat(accountGlobalConfRow.sMinPrice) && parseFloat(currentPrice) < parseFloat(accountGlobalConfRow.sMaxPrice))                  
+                                    {                        
+                                      //sell                                            
+                                      createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
+                                    }
+                                  }
+
+                                  //MACD and RSI STRATEGY
+                                  if(strategy=="macd")
+                                  {                                                                  
+                                    var breakDebug = false;
+                                    //if(nowTime.getTime()>=signalTime.getTime() && nowTime.getTime()<=nextSignalTime.getTime() && breakDebug==true)
+                                    { 
+                                      console.log("Starting MACD Strategy");
+                                      console.log("**********************")
+
+                                      if(macd.signalOrder=="Buy")
+                                      {   
+                                        console.log("Buying Signal..."); 
+                                         
+                                        //sendNotification("MACD Strategy - sell before cross below","All Thechnical indicators were passed. Trade disabled...");
+                                        get_RSI_CMO_Stoch_indicators(accountGlobalConfRow.instrument,accountGlobalConfRow.candlesCount,accountGlobalConfRow.candlesGranularity, function(indicators)
+                                        {                                    
+                                          var rsi = indicators[0];
+                                          rsi = rsi.rsi;
+                                          var mco = indicators[1];
+                                          var stock = indicators[2];
+                                          stock = stock.stock;
+                                          var rows = [];
+                                          const streamBuy = fs.createReadStream(clientCSVPath+"/MACD-"+accountGlobalConfRow.instrument+".csv"); 
+                                          csv .fromStream(streamBuy) 
+                                              .on('data', function (data) 
+                                              {
+                                                rows.push(data)
+                                              }) 
+                                              .on('end', () => 
+                                              { 
+                                                //## Strategy SELL when signal is buy before MACD cross belos signal
+                                              //BEGIN STRATEGY #1
+                                              var startedMACDBuyPeriod = false;  
+                                              var periodsBearing = 0;
+                                              var signalMacdTime = macd.time;
+                                              Object.keys(rows).forEach(function(key) 
+                                              {
+                                                var row = rows[key];
+                                                if(key>1)
+                                                {                                                  
+                                                  var currentMacdTime = row[0];
+
+                                                  if(currentMacdTime == signalMacdTime)
+                                                  {
+                                                    startedMACDBuyPeriod = true;
+                                                  }
+                                                  if(startedMACDBuyPeriod == true)
+                                                  {
+                                                    //Check bearing secuencies, if last macd value is less than penultimate pass filter 
+                                                    var currentMACD = row[2];
+                                                    var previousMACDRow = rows[key-1]; 
+                                                    var previousMACD = previousMACDRow[2];
+                                                    console.log("current  MACD: "+parseFloat(currentMACD))
+                                                    console.log("previous MACD: "+parseFloat(previousMACD))
+                                                    if(parseFloat(currentMACD) < parseFloat(previousMACD))
+                                                    {
+                                                      periodsBearing++;
+                                                    }
+                                                    console.log("Bearing Periods: "+periodsBearing);
+                                                  }                                                  
+                                                }                                        
+                                              });
+                                              
+                                             if(periodsBearing>0)
+                                              {                                                
+                                                console.log("RSI: "+rsi);
+                                                if(rsi > 50) 
+                                                {                                                    
+                                                  var stochsK = stock.K;
+                                                  var stochsD = stock.D;
+                                                  stochsK.reverse();
+                                                  stochsD.reverse();
+                                                  console.log("%K: "+stochsK[0]);  
+                                                  console.log("%D: "+stochsD[0]); 
+                                                  if(stochsK[0] < stochsD[0]) // K cross below D so, bearish
+                                                  {
+                                                    var difference = stochsD[0]  - stochsK[0]; 
+                                                    console.log("%D - %K: "+difference); 
+                                                    if(difference > 3) // angle opened - trends bearish
+                                                    {
+                                                      sendNotification("MACD Strategy - sell before cross below","All Thechnical indicators were passed. Trade disabled...");
+                                                      //place trade / sell - short
+                                                      console.log("Creating Sell Order...")
+                                                      //createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                              //## Strategy SELL when signal is buy before MACD cross below signal
+                                              //ENDS STRATEGY #1
+                                              });
+                                                               
+                                        });                                                                                                                                              
+                                      } 
+                                      if(macd.signalOrder=="Sell")
+                                      {
+                                        console.log("Selling Signal...");                                                                                                       
+                                        get_RSI_CMO_Stoch_indicators(accountGlobalConfRow.instrument,accountGlobalConfRow.candlesCount,accountGlobalConfRow.candlesGranularity, function(indicators)
+                                        {                                    
+                                          var rsi = indicators[0];
+                                          rsi = rsi.rsi;
+                                          var mco = indicators[1];
+                                          var stock = indicators[2];
+                                          stock = stock.stock;                                          
+                                          var signalMacdTime = macd.time;
+                                          var rows = [];
+                                          const streamSell = fs.createReadStream(clientCSVPath+"/MACD-"+accountGlobalConfRow.instrument+".csv"); 
+                                          csv .fromStream(streamSell) 
+                                            .on("data",function(data)
+                                            {
+                                              rows.push(data);
+                                            })
+                                            .on("end", function()
+                                            {                                            
+                                              //## Strategy BUY when signal is sell before MACD cross avobe signal
+                                              //BEGIN STRATEGY #1
+                                              var startedMACDSellingPeriod = false;  
+                                              var periodsBullish = 0;
+                                              Object.keys(rows).forEach(function(key) 
+                                              {
+                                                var row = rows[key];
+                                                if(key>0)
+                                                {                                                  
+                                                  var currentMacdTime = row[0];
+                                                  if(currentMacdTime == signalMacdTime)
+                                                  {
+                                                    startedMACDSellingPeriod = true;
+                                                  }                                                  
+                                                  if(startedMACDSellingPeriod == true)
+                                                  {
+                                                    //Check bullish secuencies, if last macd value is more than penultimate, pass filter 
+                                                    //console.log(row)
+                                                    var currentMACD = row[2];
+                                                    var previousMACDRow = rows[key-1]; 
+                                                    var previousMACD = previousMACDRow[2];
+                                                    console.log("current  MACD: "+parseFloat(currentMACD))
+                                                    console.log("previous MACD: "+parseFloat(previousMACD))
+                                                    if(parseFloat(currentMACD) > parseFloat(previousMACD))
+                                                    {
+                                                      periodsBullish++;
+                                                    }
+                                                  }
+                                                }                                          
+                                              });
+                                              console.log("Bullish Periods: "+periodsBullish);
+                                              if(periodsBullish>0)
+                                              {
+
+                                                console.log("RSI: "+rsi);
+                                                if(rsi < 50)
+                                                {
+                                                  var stochsK = stock.K;
+                                                  var stochsD = stock.D;
+                                                  stochsK.reverse();
+                                                  stochsD.reverse();
+                                                  console.log("%K: "+stochsK[0]);  
+                                                  console.log("%D: "+stochsD[0]);                                                 
+                                                  if(stochsK[0] > stochsD[0]) // K cross above D so, bullish
+                                                  {
+                                                    var difference = stochsK[0] - stochsD[0]; 
+                                                    console.log("%K - %D: "+difference);  
+                                                    if(difference > 3) // angle opened - trends bullish
+                                                    {
+                                                      //place trade / buy - long
+                                                      console.log("Creating Buy Order...")
+                                                      //createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits, accountGlobalConfRow.id);
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                              //## Strategy BUY when signal is sell before MACD cross avobe signal
+                                              //ENDS STRATEGY #1
+
+                                            })
+                                            .on("end", function(data){
+                                              
+                                            });                                                                        
+                                        });                                                                                                                                      
+                                      } 
+                                    }                                                                                                           
                                   }
                                 }
-                                
-                              });})
-                                                            
-                              var breakDebug = false;
-                              if(nowTime.getTime()>=signalTime.getTime() && nowTime.getTime()<=nextSignalTime.getTime() && breakDebug==true)
-                              { 
-                                if(macd.signalOrder=="Buy")
-                                {   
-                                  get_RSI_CMO_Stoch_indicators(accountGlobalConfRow.instrument,accountGlobalConfRow.candlesCount,accountGlobalConfRow.candlesGranularity, function(indicators)
-                                  {                                    
-                                    var rsi = indicators[0];
-                                    var mco = indicators[1];
-                                    if(parseFloat(mco.mco)<50 && parseFloat(rsi.rsi)<0)
-                                    {
-                                      //buy                                            
-                                      createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits, accountGlobalConfRow.id); 
-                                    }                                      
-                                  });                                                                                                                                           
-                                } 
-                                if(macd.signalOrder=="Sell")
-                                {  
-                                  get_RSI_CMO_Stoch_indicators(accountGlobalConfRow.instrument,accountGlobalConfRow.candlesCount,accountGlobalConfRow.candlesGranularity, function(indicators)
-                                  {                                    
-                                    var rsi = indicators[0];
-                                    var mco = indicators[1];
-                                    var stock = indicators[2];
-                                    var signalMacdTime = macd.time;
-                                    
-                                    fs.createReadStream(clientCSVPath+"/MACD-"+accountGlobalConfRow.instrument+".csv")
-                                      .pipe(csv())
-                                      .on("data", function(rows)
-                                      {
-                                        var startedMACDPeriod = false;  
-                                        var periodsBearing = 0;
-                                        Object.keys(rows).forEach(function(key) 
-                                        {
-                                          var row = rows[key];
-                                          if(key>0)
-                                          {
-                                            
-                                            var currentMacdTime = row[0];
-                                            if(currentMacdTime == signalMacdTime)
-                                            {
-                                              var startedMACDPeriod = true;
-                                            }
-                                            if(startedMACDPeriod == true)
-                                            {
-                                              //Check bearing secuencies, if last macd value is less than penultimate pass filter 
-                                              var currentMACD = row[2];
-                                              var previousMACDRow = rows[key-1]; 
-                                              var previousMACD = previousMACDRow[2];
-                                              if(parseFloat(currentMACD) < parseFloat(previousMACD))
-                                              {
-                                                periodsBearing++;
-                                              }
-                                            }
-                                          }                                          
-                                        });
-
-                                        if(periodsBearing>0)
-                                        {
-                                          if(rsi>50)
-                                          {
-                                            
-                                          }
-                                        }
-                                      })
-                                      .on("end", function(data){
-                                        
-                                      });
-                                    var K = stock.K;
-                                    var D = stock.D;
-                                    if(parseFloat(rsi.rsi)>50 && parseFloat(mco.mco)>0)
-                                    {
-                                      //sell 
-
-                                      //update stop loss for more euros    
-                                      //create trade                                      
-                                      createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
-                                    } 
-                                    else{
-                                      //update stop los for cents
-                                      createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
-                                    }  
-                                                                       
-                                  });                                                                                                                                      
-                                } 
-                              }                                                                                                           
-                            }
-                          }
-                      }    
-                  }   
+                            }    
+                        }   
+            });
+        });
+        
       });
-   });
+      if(index == (accounts.length-1))
+                {
+                    setTimeout(function() {
+                        process.exit();
+                    }, 6000);
+                }
+              index++;
+    });
+  }
+  else
+    {
+        process.exit();
+    }
+
+  }
+  else
+    {
+        process.exit();
+    }
+
 });
     
 function get_RSI_CMO_Stoch_indicators(instrument,count,granularity, callback)
@@ -208,7 +316,6 @@ function get_RSI_CMO_Stoch_indicators(instrument,count,granularity, callback)
   Object.keys(candles).forEach(function(key) 
   {
       var candle = candles[key];
-      console.log(candle);
       closes.push(candle.mid.c);
       lowers.push(candle.mid.l);
       highers.push(candle.mid.h);
@@ -232,7 +339,7 @@ function get_RSI_CMO_Stoch_indicators(instrument,count,granularity, callback)
   
   tulind.indicators.stoch.indicator([highers, lowers, closes], [14, 1, 3], function(err, stockResult) 
     {
-      var stock = {K:stockResult[0],D:stockResult[0]};
+      var stock = {K:stockResult[0],D:stockResult[1]};
       indicators.push({stock:stock});
       return callback(indicators);
     });
@@ -426,7 +533,7 @@ var server 	= email.server.connect({
 server.send({
    text:    message, 
    from:    "you <rockscripts@gmail.com>", 
-   to:      "someone <wsalexws@gmail.com>",
+   to:      "someone <rockscripts@gmail.com>",
    subject: subject
 }, function(err, message) { console.log(err || message); });
 }
