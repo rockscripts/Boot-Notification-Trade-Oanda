@@ -34,6 +34,8 @@ var client = new OANDAAdapter({
 });
 //>with account id
 //get trades
+
+var accountId =
 client.getAccounts(function(error, accounts)
 {
 if(error==null)
@@ -94,7 +96,7 @@ if(error==null)
 
                                   //MACD and RSI STRATEGY
                                   if(strategy=="macd")
-                                  {                                                                  
+                                  {                                                              
                                     var breakDebug = false;
                                     //if(nowTime.getTime()>=signalTime.getTime() && nowTime.getTime()<=nextSignalTime.getTime() && breakDebug==true)
                                     { 
@@ -155,10 +157,10 @@ if(error==null)
                                                 }                                        
                                               });
                                               
-                                             if(periodsBearing>0)
+                                             if(periodsBearing>1)
                                               {                                                
                                                 console.log("RSI: "+rsi);
-                                                if(rsi > 50) 
+                                                //if(rsi < 40)  //use RSI for over selling
                                                 {                                                    
                                                   var stochsK = stock.K;
                                                   var stochsD = stock.D;
@@ -172,10 +174,19 @@ if(error==null)
                                                     console.log("%D - %K: "+difference); 
                                                     if(difference > 3) // angle opened - trends bearish
                                                     {
-                                                      sendNotification("MACD Strategy - sell before cross below","All Thechnical indicators were passed. Trade disabled...");
+                                                      
                                                       //place trade / sell - short
-                                                      console.log("Creating Sell Order...")
-                                                      //createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
+                                                      console.log("Creating Sell/Short Order...")
+                                                      if(accountGlobalConfRow.alreadyInvested == 0)
+                                                      {
+                                                        sendNotification("MACD Strategy - selling before cross below","All Thechnical indicators were passed. Trade enabled...");
+                                                        createTrade(accountId,accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
+                                                      }
+                                                      else
+                                                      {
+                                                        //
+                                                      }
+                                                      //createTrade(accountId,accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits * (-1), accountGlobalConfRow.id);
                                                     }
                                                   }
                                                 }
@@ -186,6 +197,7 @@ if(error==null)
                                                                
                                         });                                                                                                                                              
                                       } 
+                                      
                                       if(macd.signalOrder=="Sell")
                                       {
                                         console.log("Selling Signal...");                                                                                                       
@@ -216,12 +228,15 @@ if(error==null)
                                                 if(key>0)
                                                 {                                                  
                                                   var currentMacdTime = row[0];
+                                                  
                                                   if(currentMacdTime == signalMacdTime)
                                                   {
                                                     startedMACDSellingPeriod = true;
                                                   }                                                  
                                                   if(startedMACDSellingPeriod == true)
                                                   {
+                                                    //console.log("current  Time: "+currentMacdTime)
+                                                    //console.log("signal Time: "+signalMacdTime)
                                                     //Check bullish secuencies, if last macd value is more than penultimate, pass filter 
                                                     //console.log(row)
                                                     var currentMACD = row[2];
@@ -237,11 +252,10 @@ if(error==null)
                                                 }                                          
                                               });
                                               console.log("Bullish Periods: "+periodsBullish);
-                                              if(periodsBullish>0)
+                                              if(periodsBullish>1)
                                               {
-
                                                 console.log("RSI: "+rsi);
-                                                if(rsi < 50)
+                                               // if(rsi > 40)
                                                 {
                                                   var stochsK = stock.K;
                                                   var stochsD = stock.D;
@@ -256,8 +270,9 @@ if(error==null)
                                                     if(difference > 3) // angle opened - trends bullish
                                                     {
                                                       //place trade / buy - long
-                                                      console.log("Creating Buy Order...")
-                                                      //createTrade(accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits, accountGlobalConfRow.id);
+                                                      console.log("Creating Buy/Long Order...")
+                                                      createTrade(accountId, accountGlobalConfRow.instrument, accountGlobalConfRow.maxUnits, accountGlobalConfRow.id);
+                                                      sendNotification("MACD Strategy - Buy/Long before cross avove","All Thechnical indicators were passed. Trade disabled...");
                                                     }
                                                   }
                                                 }
@@ -284,7 +299,7 @@ if(error==null)
                 {
                     setTimeout(function() {
                         process.exit();
-                    }, 6000);
+                    }, 20000);
                 }
               index++;
     });
@@ -350,7 +365,7 @@ function get_RSI_CMO_Stoch_indicators(instrument,count,granularity, callback)
   }); 
 }  
 
-function createTrade(instrument, units, confId)
+function createTrade(accountId, instrument, units, confId)
 {
   var accountID = accountId; 
  

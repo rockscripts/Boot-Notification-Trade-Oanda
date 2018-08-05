@@ -8,13 +8,10 @@ This application buy and sell in differents markets using Oanda platform, i reco
 <p>It provides a user interface for making investments based on MACD and RSI indicators, custom configuration like price ranges, bearish and bullish probability for buying and selling, take control in profits and losses automatically without spend hours watching screen. It runs in background with cronjobs or with an friendly user interface.</p>
 <br>
 <p>
-<img src='assets/images/1.png'>
+<img src='assets/images/candles.png'>
 </p>
 <p>
-<img src='assets/images/2.png'>
-</p>
-<p>
-<img src='assets/images/3.png'>
+<img src='assets/images/macd-grid.png'>
 </p>
 Contact me if you have any questions: <b>rockscripts@gmail.com</b>
 </p>
